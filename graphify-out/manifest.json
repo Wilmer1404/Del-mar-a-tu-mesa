@@ -1,0 +1,152 @@
+{
+  ".opencode/opencode.json": {
+    "mtime": 1783181507.1128051,
+    "ast_hash": "abcc8b9dcd80bca5f9dde6d9f0c3ae79",
+    "semantic_hash": ""
+  },
+  ".opencode/plugins/graphify.js": {
+    "mtime": 1783181507.112618,
+    "ast_hash": "64ccd3c03dbfe0980b6095766f5c4e52",
+    "semantic_hash": ""
+  },
+  "eslint.config.js": {
+    "mtime": 1783120141.5532172,
+    "ast_hash": "3aa4b57d7f08181d86bde52a4dcb7f22",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1783123001.6243439,
+    "ast_hash": "4b07b8bd3e89768244cfa2866e38f3a1",
+    "semantic_hash": ""
+  },
+  "server/package.json": {
+    "mtime": 1783122093.3328962,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "server/src/app.js": {
+    "mtime": 1783122093.317896,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "server/src/server.js": {
+    "mtime": 1783122093.324896,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "src/App.jsx": {
+    "mtime": 1783179750.8252492,
+    "ast_hash": "7648827d3e2139e8be20c8e7c0bf8a7c",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Sidebar.jsx": {
+    "mtime": 1783179654.6349795,
+    "ast_hash": "52d909f8b2db181a9f2701c282292088",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/StatCard.jsx": {
+    "mtime": 1783179656.650027,
+    "ast_hash": "bd84d823d0f11817fca85d2ecdd09a00",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/TopBar.jsx": {
+    "mtime": 1783179670.3663507,
+    "ast_hash": "1cf22c7c638752e439f3526bd455c75a",
+    "semantic_hash": ""
+  },
+  "src/components/ui/Button.jsx": {
+    "mtime": 1783123003.6680207,
+    "ast_hash": "52906bdc729aa73fda445431e3cafe2e",
+    "semantic_hash": ""
+  },
+  "src/components/ui/Checkbox.jsx": {
+    "mtime": 1783123023.615472,
+    "ast_hash": "8ee85a47815606fcba6d3c723fad92ab",
+    "semantic_hash": ""
+  },
+  "src/components/ui/Input.jsx": {
+    "mtime": 1783123014.6372688,
+    "ast_hash": "27d52057cde69dccb2cfe9f5e3d1cd0d",
+    "semantic_hash": ""
+  },
+  "src/layouts/AuthLayout.jsx": {
+    "mtime": 1783178513.9165313,
+    "ast_hash": "e2679247c01fcadab0fbc56225a3e746",
+    "semantic_hash": ""
+  },
+  "src/layouts/DashboardLayout.jsx": {
+    "mtime": 1783179682.326633,
+    "ast_hash": "a5b3a2584ad5a825c8ff811ce169069c",
+    "semantic_hash": ""
+  },
+  "src/main.jsx": {
+    "mtime": 1783120141.5529368,
+    "ast_hash": "e13723e2574429d9a6d849727e3ff695",
+    "semantic_hash": ""
+  },
+  "src/pages/auth/Login.jsx": {
+    "mtime": 1783178406.763938,
+    "ast_hash": "1635f434fd58abb0618739b276665f4b",
+    "semantic_hash": ""
+  },
+  "src/pages/auth/Register.jsx": {
+    "mtime": 1783178656.0188737,
+    "ast_hash": "cc85a59b8dbc5d0feb8e5e4e0c3b6c9a",
+    "semantic_hash": ""
+  },
+  "src/pages/pescador/Dashboard.jsx": {
+    "mtime": 1783180911.991507,
+    "ast_hash": "a9cb6ac9bca0b5e29945aa4de39b73f3",
+    "semantic_hash": ""
+  },
+  "vite.config.js": {
+    "mtime": 1783120535.8736658,
+    "ast_hash": "f955ee4eeae138a29188424d174b28b7",
+    "semantic_hash": ""
+  },
+  ".github/workflows/codeql.yml": {
+    "mtime": 1783121084.0882456,
+    "ast_hash": "8aab114c34b4c4f83ae214de331c8b9c",
+    "semantic_hash": ""
+  },
+  ".github/workflows/zap.yml": {
+    "mtime": 1783177121.570853,
+    "ast_hash": "ddca7560fbba56fbe594d51c2161596f",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1783120141.5456843,
+    "ast_hash": "2632178f39771952fe4db5275e1baf04",
+    "semantic_hash": ""
+  },
+  "src/assets/README.md": {
+    "mtime": 1783120141.5536847,
+    "ast_hash": "a28dc4cb878325f3e9e5649f3e1469ac",
+    "semantic_hash": ""
+  },
+  "public/favicon.svg": {
+    "mtime": 1783120141.5472565,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": ""
+  },
+  "public/hero.png": {
+    "mtime": 1783120141.5518818,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": ""
+  },
+  "public/icons.svg": {
+    "mtime": 1783120141.5476525,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": ""
+  },
+  "public/react.svg": {
+    "mtime": 1783120141.5521653,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": ""
+  },
+  "public/vite.svg": {
+    "mtime": 1783120141.5524635,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": ""
+  }
+}

@@ -37,6 +37,6 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:4173'
-          # Puedes cambiar fail_action a true si quieres que falle la acción si encuentra vulnerabilidades
-          fail_action: false 
+          artifact_name: zap-report
+          fail_action: false
           allow_issue_writing: false

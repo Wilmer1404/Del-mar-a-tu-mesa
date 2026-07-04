@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PescadorDashboard from './pages/pescador/Dashboard'
+import RegistrarCaptura from './pages/pescador/RegistrarCaptura'
+import MisCompras from './pages/pescador/MisCompras'
+import MapaCaletas from './pages/pescador/MapaCaletas'
 import './index.css'
 
 function App() {
@@ -13,6 +16,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/pescador/dashboard" element={<PescadorDashboard />} />
+        <Route path="/pescador/captura" element={<RegistrarCaptura />} />
+        <Route path="/pescador/compras" element={<MisCompras />} />
+        <Route path="/pescador/mapa" element={<MapaCaletas />} />
         {/* Rutas futuras del pescador */}
         <Route path="/pescador/*" element={<PescadorDashboard />} />
       </Routes>

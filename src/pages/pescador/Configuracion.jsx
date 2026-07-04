@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   User,
   Mail,
@@ -18,6 +19,7 @@ import {
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
 
 // ── Avatar uploader ───────────────────────────────────────────────────────────
 function AvatarUploader({ initials }) {
@@ -87,6 +89,14 @@ function Toggle({ checked, onChange }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Configuracion() {
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const [saved, setSaved] = useState(false);
   const [notifs, setNotifs] = useState({
     nuevosPrecios: true,
@@ -97,15 +107,19 @@ export default function Configuracion() {
   });
 
   const [perfil, setPerfil] = useState({
-    nombre: 'Arturo Prat',
-    apellido: 'González',
-    email: 'arturo.prat@delmar.pe',
-    telefono: '+51 996 234 567',
-    caleta: 'Parachique',
+    nombre:      auth?.nombre?.split(' ')[0] ?? 'Arturo',
+    apellido:    auth?.nombre?.split(' ').slice(1).join(' ') ?? 'Prat',
+    email:       auth?.email      ?? 'arturo.prat@delmar.pe',
+    telefono:    '+51 996 234 567',
+    caleta:      auth?.caleta     ?? 'Parachique',
     embarcacion: 'Esperanza del Mar',
-    licencia: 'PRODUCE-2024-00341',
-    metodoPago: 'Yape / BCP: 996 234 567',
+    licencia:    'PRODUCE-2024-00341',
+    metodoPago:  'Yape / BCP: 996 234 567',
   });
+
+  const initials = auth?.nombre
+    ? auth.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : 'AP';
 
   const handlePerfilChange = (k) => (e) =>
     setPerfil((prev) => ({ ...prev, [k]: e.target.value }));
@@ -131,7 +145,7 @@ export default function Configuracion() {
           {/* ── Perfil ── */}
           <SectionCard title="Perfil Personal" icon={User}>
             <div className="space-y-6">
-              <AvatarUploader initials="AP" />
+              <AvatarUploader initials={initials} />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
@@ -265,7 +279,10 @@ export default function Configuracion() {
             <h2 className="text-sm font-bold text-red-600">Zona de Peligro</h2>
           </div>
           <div className="p-6 space-y-3">
-            <button className="w-full flex items-center justify-between text-sm text-slate-600 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 px-4 py-3 rounded-xl transition-all">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-between text-sm text-slate-600 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 px-4 py-3 rounded-xl transition-all"
+            >
               <span className="flex items-center gap-2"><LogOut size={15} /> Cerrar sesión en todos los dispositivos</span>
               <ChevronRight size={15} />
             </button>

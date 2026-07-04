@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
   Tag,
@@ -42,6 +43,19 @@ const NAV_SECTIONS = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate  = useNavigate();
+  const { auth, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const initials = auth?.nombre
+    ? auth.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : 'P';
+  const nombre  = auth?.nombre  ?? 'Cap. Arturo Prat';
+  const caleta  = auth?.caleta  ?? 'Panel del Pescador';
 
   return (
     <aside className="flex flex-col h-full bg-slate-900 text-white w-64 flex-shrink-0">
@@ -91,13 +105,18 @@ export function Sidebar() {
       <div className="border-t border-slate-700/60 px-3 py-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-sky-500 flex items-center justify-center font-bold text-sm flex-shrink-0">
-            A
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">Cap. Arturo Prat</p>
-            <p className="text-xs text-slate-400 truncate">Puerto Madero</p>
+            <p className="text-sm font-semibold truncate">{nombre}</p>
+            <p className="text-xs text-slate-400 truncate">{caleta}</p>
           </div>
-          <button aria-label="Cerrar sesión" className="text-slate-400 hover:text-red-400 transition-colors" title="Cerrar sesión">
+          <button
+            aria-label="Cerrar sesión"
+            onClick={handleLogout}
+            className="text-slate-400 hover:text-red-400 transition-colors"
+            title="Cerrar sesión"
+          >
             <LogOut size={16} />
           </button>
         </div>

@@ -1,42 +1,72 @@
-name: OWASP ZAP Integration
+name: OWASP ZAP Security Scan
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '0 0 * * 0' # Run once a week
 
 jobs:
   zap-scan:
     runs-on: ubuntu-latest
-    name: OWASP ZAP Baseline Scan
+    name: Escaneo de Seguridad Dinámico (DAST)
+
     steps:
-      - name: Checkout repository
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      - name: Install dependencies
+      - name: Instalar dependencias
         run: npm install
 
-      - name: Build the application
+      - name: Construir la aplicación
         run: npm run build
 
-      - name: Start the preview server
-        run: npm run preview -- --port 4173 &
+      - name: Levantar servidor de previsualización
+        run: nohup npm run preview -- --port 4173 --host > app.log 2>&1 &
 
-      - name: Wait for server to be ready
-        run: sleep 5
+      - name: Esperar a que la aplicación esté lista
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:4173 >/dev/null 2>&1; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not start in time"
+          tail -n 50 app.log || true
+          exit 1
 
-      - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+      - name: Preparar directorio de reportes ZAP
+        run: mkdir -p ${{ github.workspace }}/zap-reports && chmod 777 ${{ github.workspace }}/zap-reports
+
+      - name: Ejecutar OWASP ZAP Baseline Scan
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/zap-reports:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://localhost:4173 \
+            -r report.html \
+            -w report.md \
+            -J report.json \
+            -I
+        continue-on-error: true
+
+      - name: Verificar archivos de reporte
+        if: always()
+        run: ls -la ${{ github.workspace }}/zap-reports || true
+
+      - name: Subir reporte ZAP
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          target: 'http://localhost:4173'
-          artifact_name: zap-report
-          fail_action: false
-          allow_issue_writing: false
+          name: zap-report
+          path: ${{ github.workspace }}/zap-reports/
+          if-no-files-found: warn

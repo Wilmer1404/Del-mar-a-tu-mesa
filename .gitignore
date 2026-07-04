@@ -1,24 +1,116 @@
-# Logs
-logs
+# ════════════════════════════════════════════════════
+#   .gitignore — Del Mar a Tu Mesa
+#   Proyecto: React + Vite (frontend) + Node.js (backend)
+# ════════════════════════════════════════════════════
+
+
+# ── Dependencias ─────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+
+# ── Build / Distribución ─────────────────────────────
+dist/
+dist-ssr/
+build/
+out/
+.output/
+
+
+# ── Variables de entorno (¡NUNCA subir claves!) ───────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+server/.env
+server/.env.*
+
+
+# ── Logs ─────────────────────────────────────────────
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+app.log
 
-node_modules
-dist
-dist-ssr
+
+# ── Cache ─────────────────────────────────────────────
+.cache/
+.vite/
+.turbo/
 *.local
 
-# Editor directories and files
+
+# ── Herramientas de análisis y plugins externos ───────
+graphify-out/
+.opencode/
+
+
+# ── Editores ──────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+!.vscode/settings.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*~
+
+
+# ── Sistema Operativo ─────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+
+# ── Testing & Cobertura ───────────────────────────────
+coverage/
+*.lcov
+.nyc_output/
+
+
+# ── Docker ───────────────────────────────────────────
+.dockerignore
+docker-compose.override.yml
+
+
+# ── Reportes de seguridad (ZAP, SonarQube, etc.) ─────
+zap-reports/
+report_html.html
+report_md.md
+report_json.json
+sonar-project.properties
+
+
+# ── Archivos temporales y misceláneos ─────────────────
+*.tmp
+*.temp
+*.bak
+*.orig
+*.pid
+*.seed
+*.pid.lock

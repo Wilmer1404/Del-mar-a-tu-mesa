@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
 import {
@@ -12,11 +12,10 @@ import {
   Trash2,
   QrCode,
   MapPin,
-  ShoppingCart,
   ArrowRight,
   TrendingUp,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 const STATS = [
@@ -30,12 +29,6 @@ const CAPTURAS = [
   { id: 1, nombre: 'Huachinango del Pacífico', lugar: 'Puerto Madero, Az', peso: '40.5', precio: '32.00', estado: 'PUBLICADO', estadoColor: 'bg-emerald-100 text-emerald-700' },
   { id: 2, nombre: 'Atún Aleta Azul', lugar: 'Puerto Madero', peso: '120.0', precio: '85.50', estado: 'PENDIENTE', estadoColor: 'bg-amber-100 text-amber-700' },
   { id: 3, nombre: 'Langostino Jumbo', lugar: 'Bahía Central Bay', peso: '22.5', precio: '48.00', estado: 'EN REVISIÓN', estadoColor: 'bg-sky-100 text-sky-700' },
-];
-
-const INSUMOS = [
-  { id: 1, nombre: 'Redes de Cerco Reforzadas', precio: 'S/ 4,420.00', tag: 'TOP', tagColor: 'bg-red-500' },
-  { id: 2, nombre: 'Combustible Diesel B5', precio: 'S/ 16.50 / Gl', tag: 'NUEVO', tagColor: 'bg-sky-500' },
-  { id: 3, nombre: 'Mantenimiento de Casco', precio: 'Disponibilidad limitada', tag: 'OFERTA', tagColor: 'bg-amber-500' },
 ];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -62,39 +55,18 @@ function CapturaRow({ captura }) {
       </td>
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
-          <button className="text-slate-400 hover:text-sky-500 transition-colors"><Eye size={15} /></button>
-          <button className="text-slate-400 hover:text-amber-500 transition-colors"><Pencil size={15} /></button>
-          <button className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+          <button aria-label="Ver detalle" className="text-slate-400 hover:text-sky-500 transition-colors"><Eye size={15} /></button>
+          <button aria-label="Editar" className="text-slate-400 hover:text-amber-500 transition-colors"><Pencil size={15} /></button>
+          <button aria-label="Eliminar" className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
         </div>
       </td>
     </tr>
   );
 }
 
-function InsumoCard({ insumo }) {
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100">
-      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl flex-shrink-0">
-        🛒
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <p className="text-sm font-semibold text-slate-800 truncate">{insumo.nombre}</p>
-          <span className={`text-[9px] font-bold text-white px-1.5 py-0.5 rounded-md flex-shrink-0 ${insumo.tagColor}`}>
-            {insumo.tag}
-          </span>
-        </div>
-        <p className="text-xs text-sky-600 font-bold">{insumo.precio}</p>
-      </div>
-      <button className="text-slate-400 hover:text-sky-500 flex-shrink-0">
-        <ShoppingCart size={16} />
-      </button>
-    </div>
-  );
-}
-
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function PescadorDashboard() {
+  const navigate = useNavigate();
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-screen-xl mx-auto">
@@ -183,7 +155,7 @@ export default function PescadorDashboard() {
             <p className="text-xs text-slate-400 leading-relaxed">
               Genera etiquetas trazadoras para tus últimas capturas y asegura el origen de tus productos.
             </p>
-            <button className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 transition-colors text-white text-xs font-bold py-2.5 rounded-xl">
+            <button onClick={() => navigate('/pescador/trazabilidad')} className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 transition-colors text-white text-xs font-bold py-2.5 rounded-xl">
               <QrCode size={14} /> Generar Etiqueta
             </button>
           </div>
@@ -210,7 +182,7 @@ export default function PescadorDashboard() {
             {/* Map Placeholder */}
             <div className="relative h-52 bg-gradient-to-br from-sky-200 to-blue-400 overflow-hidden">
               <div className="absolute inset-0 opacity-30 text-[80px] flex items-center justify-center select-none">🗺️</div>
-              <button className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-slate-900 transition-colors flex items-center gap-1.5">
+              <button onClick={() => navigate('/pescador/mapa')} className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-slate-900 transition-colors flex items-center gap-1.5">
                 <MapPin size={12} /> Ampliar Mapa
               </button>
             </div>

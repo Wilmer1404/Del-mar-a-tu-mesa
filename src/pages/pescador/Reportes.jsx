@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  BarChart3,
   TrendingUp,
   TrendingDown,
   Download,
-  Calendar,
   DollarSign,
   Fish,
   Package,

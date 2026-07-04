@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -11,7 +11,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Bell,
   Ship,
   LogOut,
   Store,
@@ -116,7 +115,7 @@ export function Sidebar() {
               <p className="text-sm font-semibold truncate">Cap. Arturo Prat</p>
               <p className="text-xs text-slate-400 truncate">Puerto Madero</p>
             </div>
-            <button className="text-slate-400 hover:text-red-400 transition-colors" title="Cerrar sesión">
+            <button aria-label="Cerrar sesión" className="text-slate-400 hover:text-red-400 transition-colors" title="Cerrar sesión">
               <LogOut size={16} />
             </button>
           </div>
@@ -126,6 +125,7 @@ export function Sidebar() {
       {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
+        aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
         className="absolute -right-3 top-20 z-10 bg-slate-900 border border-slate-700 text-slate-400 hover:text-white rounded-full p-1 transition-colors"
       >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}

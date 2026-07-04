@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Tag,
@@ -12,11 +12,9 @@ import {
   Clock,
   XCircle,
   ShoppingCart,
-  TrendingUp,
-  ChevronDown,
   ChevronUp,
+  ChevronDown,
   MoreVertical,
-  Fish,
   Package,
   DollarSign,
   AlertCircle,
@@ -254,6 +252,19 @@ function OfertaCard({ oferta, onDelete }) {
   );
 }
 
+function SortBtn({ label, sortKey, sortBy, sortAsc, onToggle }) {
+  return (
+    <button
+      onClick={() => onToggle(sortKey)}
+      className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+        sortBy === sortKey ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+      }`}
+    >
+      {label} {sortBy === sortKey ? (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />) : null}
+    </button>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function MisOfertas() {
   const [search, setSearch]           = useState('');
@@ -289,17 +300,6 @@ export default function MisOfertas() {
   const totalIngresosActivos = ofertas
     .filter((o) => o.estado === 'publicado')
     .reduce((acc, o) => acc + (o.pesoCapturo - o.pesoDisponible) * o.precioPorKg, 0);
-
-  const SortBtn = ({ label, key }) => (
-    <button
-      onClick={() => toggleSort(key)}
-      className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-        sortBy === key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      }`}
-    >
-      {label} {sortBy === key ? (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />) : null}
-    </button>
-  );
 
   return (
     <DashboardLayout>
@@ -361,9 +361,9 @@ export default function MisOfertas() {
           {/* Sort */}
           <div className="flex items-center gap-1.5">
             <Filter size={13} className="text-slate-400" />
-            <SortBtn label="Fecha"  key="fecha" />
-            <SortBtn label="Precio" key="precio" />
-            <SortBtn label="Peso"   key="peso" />
+            <SortBtn label="Fecha"  sortKey="fecha"  sortBy={sortBy} sortAsc={sortAsc} onToggle={toggleSort} />
+            <SortBtn label="Precio" sortKey="precio" sortBy={sortBy} sortAsc={sortAsc} onToggle={toggleSort} />
+            <SortBtn label="Peso"   sortKey="peso"   sortBy={sortBy} sortAsc={sortAsc} onToggle={toggleSort} />
           </div>
         </div>
 

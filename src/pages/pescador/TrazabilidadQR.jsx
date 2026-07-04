@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   QrCode,
   Plus,
@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Fish,
   BadgeCheck,
   Copy,
   ChevronRight,

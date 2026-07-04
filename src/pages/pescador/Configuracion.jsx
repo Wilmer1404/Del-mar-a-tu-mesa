@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   User,
   Mail,
@@ -8,8 +8,6 @@ import {
   Bell,
   Camera,
   Save,
-  Eye,
-  EyeOff,
   Check,
   Anchor,
   Trash2,
@@ -90,7 +88,6 @@ function Toggle({ checked, onChange }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Configuracion() {
   const [saved, setSaved] = useState(false);
-  const [showPass, setShowPass] = useState(false);
   const [notifs, setNotifs] = useState({
     nuevosPrecios: true,
     ofertasReservadas: true,

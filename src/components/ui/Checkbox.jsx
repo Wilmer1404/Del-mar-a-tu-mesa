@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export function Checkbox({ label, id, className = '', ...props }) {
   return (

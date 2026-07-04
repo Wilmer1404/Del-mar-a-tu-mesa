@@ -1,5 +1,4 @@
-import React from 'react';
-import { Ship, Anchor } from 'lucide-react';
+import { Ship } from 'lucide-react';
 
 export function AuthLayout({ children }) {
   return (

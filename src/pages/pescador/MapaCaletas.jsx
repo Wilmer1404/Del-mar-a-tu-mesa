@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
   MapPin,
-  Fish,
   Anchor,
   Wind,
   Thermometer,
@@ -198,7 +197,7 @@ function EstadoPill({ estado }) {
 }
 
 // ── Caleta Detail Sidebar ─────────────────────────────────────────────────────
-function CaletaDetail({ caleta, onClose }) {
+function CaletaDetail({ caleta }) {
   const cfg = ESTADO_CFG[caleta.estado];
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -355,7 +354,7 @@ export default function MapaCaletas() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {CALETAS.map((caleta) => (
-                <React.Fragment key={caleta.id}>
+                <Fragment key={caleta.id}>
                   {/* Círculo de radio */}
                   <Circle
                     center={caleta.coords}
@@ -381,7 +380,7 @@ export default function MapaCaletas() {
                       </div>
                     </Popup>
                   </Marker>
-                </React.Fragment>
+                </Fragment>
               ))}
             </MapContainer>
             <LeyendaMapa />

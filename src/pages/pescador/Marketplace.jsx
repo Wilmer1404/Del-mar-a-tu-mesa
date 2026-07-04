@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -11,7 +11,6 @@ import {
   BadgeCheck,
   Flame,
   Clock,
-  ChevronDown,
   X,
   Store,
   Package,
@@ -223,7 +222,7 @@ export default function Marketplace() {
   const [search, setSearch]       = useState('');
   const [categoria, setCategoria] = useState('todos');
   const [sort, setSort]           = useState('reciente');
-  const [maxPrecio, setMaxPrecio] = useState(100);
+  const [maxPrecio] = useState(100);
   const [soloDisp, setSoloDisp]   = useState(false);
   const [cartOpen, setCartOpen]   = useState(false);
   const { cart, add, remove, total } = useCart();

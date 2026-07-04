@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Mail, Lock, User, Briefcase } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '../../layouts/AuthLayout';
@@ -86,7 +86,7 @@ export default function Register() {
           />
         </div>
 
-        <Button type="submit" fullWidth className="mt-4 py-3 text-base shadow-lg shadow-slate-900/10">
+        <Button type="submit" fullWidth size="lg" className="shadow-lg shadow-sky-500/20">
           Enviar Solicitud &rarr;
         </Button>
 

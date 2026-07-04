@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   ShoppingBag,
   Search,
-  FileText,
   Eye,
   Download,
   CheckCircle2,
@@ -12,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  TrendingDown,
   DollarSign,
   Package,
 } from 'lucide-react';

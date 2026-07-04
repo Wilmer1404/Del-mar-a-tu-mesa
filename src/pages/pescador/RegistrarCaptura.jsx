@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,12 +10,10 @@ import {
   Anchor,
   AlignLeft,
   Camera,
-  QrCode,
   BadgeCheck,
   Lightbulb,
   Save,
   X,
-  Upload,
   Clock,
 } from 'lucide-react';
 
@@ -96,6 +94,7 @@ function FileUploadArea({ preview, onFileChange }) {
 
 // ── QR Sidebar ────────────────────────────────────────────────────────────────
 function TrazaOrigen({ batchId }) {
+  const rng = (i) => ((batchId.length * 9301 + i * 49297 + 233) % 233280) / 233280;
   return (
     <div className="space-y-4">
       {/* QR Card */}
@@ -109,7 +108,7 @@ function TrazaOrigen({ batchId }) {
             {Array.from({ length: 49 }).map((_, i) => (
               <div
                 key={i}
-                className={`rounded-[1px] ${Math.random() > 0.45 ? 'bg-white' : 'bg-slate-900'}`}
+                className={`rounded-[1px] ${rng(i) > 0.45 ? 'bg-white' : 'bg-slate-900'}`}
               />
             ))}
           </div>
@@ -189,6 +188,7 @@ export default function RegistrarCaptura() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
+            aria-label="Volver"
             className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm"
           >
             <ArrowLeft size={17} />

@@ -8,10 +8,10 @@ export function AuthLayout({ children }) {
       <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 flex-col justify-between p-12 overflow-hidden">
         {/* Background Image with Overlay */}
         <div 
-          className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
+          className="absolute inset-0 z-0 opacity-100 bg-cover bg-center"
           style={{ 
-            backgroundImage: "url('https://images.unsplash.com/photo-1498092651296-641e88c3b057?auto=format&fit=crop&q=80')",
-            filter: 'brightness(0.7) contrast(1.2)'
+            backgroundImage: "url('https://saludconlupa.com/media/images/juanjose_melchor.width-1920.jpg')",
+            filter: 'brightness(0.8) contrast(1.2)'
           }}
         />
         {/* Gradient Overlay for better text readability */}
@@ -33,11 +33,6 @@ export function AuthLayout({ children }) {
             </p>
           </div>
         </div>
-
-        <div className="relative z-10 flex gap-12 mt-12 opacity-50">
-          <Ship size={64} className="text-white" />
-          <Anchor size={48} className="text-white mt-4" />
-        </div>
       </div>
 
       {/* Right Column - Form */}
@@ -52,19 +47,6 @@ export function AuthLayout({ children }) {
 
         <div className="w-full max-w-md mx-auto">
           {children}
-        </div>
-        
-        {/* Floating Badge (Bottom Right) */}
-        <div className="hidden sm:flex absolute bottom-8 right-8 bg-white shadow-xl rounded-xl p-4 items-center gap-4 border border-slate-100">
-          <div className="bg-emerald-100 p-2 rounded-lg">
-            <div className="w-6 h-6 bg-emerald-500 rounded-sm flex items-center justify-center">
-              <span className="text-white text-xs font-bold">B2B</span>
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Estado del mercado</p>
-            <p className="text-sm font-bold text-slate-800">Suministro Estable</p>
-          </div>
         </div>
       </div>
     </div>

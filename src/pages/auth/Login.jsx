@@ -9,14 +9,13 @@ import { Checkbox } from '../../components/ui/Checkbox';
 export default function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Implement login logic
   };
 
   return (
     <AuthLayout>
       <div className="mb-10">
         <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Bienvenido</h2>
-        <p className="text-slate-500 text-sm">Ingresa tus credenciales para acceder al marketplace premium.</p>
+        <p className="text-slate-500 text-sm">Ingresa tus credenciales para acceder al del mar a tu mesa.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -66,26 +65,10 @@ export default function Login() {
         <p className="text-center text-sm text-slate-500 mt-8">
           ¿Aún no eres parte de la red?{' '}
           <Link to="/register" className="font-bold text-slate-900 hover:text-sky-600 transition-colors">
-            Solicitar acceso B2B
+            Registrate
           </Link>
         </p>
       </form>
-      
-      {/* Footer Info Icons */}
-      <div className="mt-16 flex justify-center gap-8 border-t border-slate-100 pt-8">
-        <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
-          <div className="w-5 h-5 border rounded-sm" />
-          <span className="text-[10px] uppercase font-bold text-slate-500">Secure Data</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
-          <div className="w-5 h-5 border rounded-sm" />
-          <span className="text-[10px] uppercase font-bold text-slate-500">Traceable</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
-          <div className="w-5 h-5 border rounded-sm" />
-          <span className="text-[10px] uppercase font-bold text-slate-500">API Integrated</span>
-        </div>
-      </div>
     </AuthLayout>
   );
 }

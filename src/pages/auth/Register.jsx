@@ -9,13 +9,12 @@ import { Checkbox } from '../../components/ui/Checkbox';
 export default function Register() {
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Implement registration logic
   };
 
   return (
     <AuthLayout>
       <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Solicitar Acceso B2B</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Crea tu cuenta con nosotros</h2>
         <p className="text-slate-500 text-sm">Únete al marketplace premium y optimiza tu cadena de suministro.</p>
       </div>
 
@@ -55,7 +54,7 @@ export default function Register() {
           <Input 
             id="email" 
             type="email" 
-            placeholder="maria@empresa.com" 
+            placeholder="maria@gmail.com" 
             icon={Mail} 
             required
           />

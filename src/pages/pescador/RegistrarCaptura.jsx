@@ -15,12 +15,14 @@ import {
   Save,
   X,
   Clock,
+  QrCode,
 } from 'lucide-react';
 
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Button } from '../../components/ui/Button';
 import { SelectField } from '../../components/ui/SelectField';
 import { FormField } from '../../components/ui/FormField';
+import { api } from '../../services/api';
 
 const METODOS = [
   { value: '', label: 'Seleccione método...', disabled: true },
@@ -31,8 +33,8 @@ const METODOS = [
   { value: 'trampa', label: '📦 Trampa/Nasa' },
 ];
 
-// ── Batch ID generator ────────────────────────────────────────────────────────
-const BATCH_ID = `LT-${Date.now().toString().slice(-8)}-001`;
+// ── Batch ID generator (server-generated) ─────────────────────────────────────
+const BATCH_PLACEHOLDER = 'Se generará al guardar';
 
 // ── File Upload Component ─────────────────────────────────────────────────────
 function FileUploadArea({ preview, onFileChange }) {
@@ -93,30 +95,21 @@ function FileUploadArea({ preview, onFileChange }) {
 }
 
 // ── QR Sidebar ────────────────────────────────────────────────────────────────
-function TrazaOrigen({ batchId }) {
-  const rng = (i) => ((batchId.length * 9301 + i * 49297 + 233) % 233280) / 233280;
+function TrazaOrigen() {
   return (
     <div className="space-y-4">
-      {/* QR Card */}
+      {/* QR Info */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center gap-4">
         <h3 className="text-sm font-bold text-slate-900 self-start">Traza de Origen</h3>
         <p className="text-xs text-slate-500 self-start -mt-2">Escanee para verificar autenticidad</p>
 
-        {/* QR placeholder */}
-        <div className="w-40 h-40 rounded-xl bg-slate-900 p-3 flex items-center justify-center">
-          <div className="grid grid-cols-7 gap-0.5 w-full h-full">
-            {Array.from({ length: 49 }).map((_, i) => (
-              <div
-                key={i}
-                className={`rounded-[1px] ${rng(i) > 0.45 ? 'bg-white' : 'bg-slate-900'}`}
-              />
-            ))}
-          </div>
+        <div className="w-40 h-40 rounded-xl bg-slate-100 flex items-center justify-center">
+          <QrCode size={64} className="text-slate-300" />
         </div>
 
         <div className="w-full bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Batch ID</p>
-          <p className="text-base font-extrabold text-slate-900 tracking-wider font-mono">{batchId}</p>
+          <p className="text-base font-extrabold text-slate-500 tracking-wider font-mono">{BATCH_PLACEHOLDER}</p>
         </div>
 
         <div className="flex items-center gap-2 text-sm">
@@ -137,12 +130,6 @@ function TrazaOrigen({ batchId }) {
           Los lotes con fotos de alta resolución y detalles precisos de captura tienen un{' '}
           <span className="text-sky-400 font-bold">45% más de probabilidad</span> de ser reservados en las primeras 2 horas.
         </p>
-      </div>
-
-      {/* Borrador automático badge */}
-      <div className="flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-xl px-4 py-3">
-        <Clock size={15} className="text-sky-500 flex-shrink-0" />
-        <p className="text-xs text-sky-700 font-semibold">Borrador guardado automáticamente</p>
       </div>
     </div>
   );
@@ -174,10 +161,22 @@ export default function RegistrarCaptura() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    // TODO: connect to API
-    await new Promise((r) => setTimeout(r, 1200));
-    setSaving(false);
-    navigate('/pescador/dashboard');
+    try {
+      await api.post('/capturas', {
+        especie: form.especie,
+        caleta_origen: form.caleta,
+        cantidad_kg: parseFloat(form.cantidad),
+        precio_por_kg: parseFloat(form.precioPorKg),
+        fecha_hora_captura: form.fechaHora,
+        metodo_pesca: form.metodo,
+        observaciones: form.observaciones || undefined,
+      });
+      navigate('/pescador/dashboard');
+    } catch (err) {
+      alert('Error al guardar: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -359,7 +358,7 @@ export default function RegistrarCaptura() {
 
             {/* ── Right: Traza + Consejos ── */}
             <div className="lg:col-span-1">
-              <TrazaOrigen batchId={BATCH_ID} />
+              <TrazaOrigen />
             </div>
 
           </div>

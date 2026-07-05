@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Tag,
@@ -18,109 +18,29 @@ import {
   Package,
   DollarSign,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
+import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const OFERTAS = [
-  {
-    id: 'OF-2026-001',
-    especie: 'Huachinango del Pacífico',
-    caleta: 'Parachique',
-    fecha: '2026-07-03',
-    vencimiento: '2026-07-05',
-    pesoCapturo: 40.5,
-    pesoDisponible: 28.5,
-    precioPorKg: 32.00,
-    metodo: 'Artesanal (Espinel)',
-    estado: 'publicado',
-    visitas: 47,
-    reservas: 2,
-    emoji: '🐟',
-    destacado: true,
-  },
-  {
-    id: 'OF-2026-002',
-    especie: 'Atún Aleta Azul',
-    caleta: 'Yacila',
-    fecha: '2026-07-02',
-    vencimiento: '2026-07-04',
-    pesoCapturo: 120.0,
-    pesoDisponible: 120.0,
-    precioPorKg: 85.50,
-    metodo: 'Palangre',
-    estado: 'pendiente',
-    visitas: 12,
-    reservas: 0,
-    emoji: '🐠',
-    destacado: false,
-  },
-  {
-    id: 'OF-2026-003',
-    especie: 'Langostino Jumbo',
-    caleta: 'Puerto Paita',
-    fecha: '2026-06-30',
-    vencimiento: '2026-07-02',
-    pesoCapturo: 22.5,
-    pesoDisponible: 0,
-    precioPorKg: 48.00,
-    metodo: 'Buceo',
-    estado: 'vendido',
-    visitas: 93,
-    reservas: 5,
-    emoji: '🦐',
-    destacado: false,
-  },
-  {
-    id: 'OF-2026-004',
-    especie: 'Corvina',
-    caleta: 'El Ñuro',
-    fecha: '2026-06-28',
-    vencimiento: '2026-06-30',
-    pesoCapturo: 55,
-    pesoDisponible: 10,
-    precioPorKg: 14.00,
-    metodo: 'Red de enmalle',
-    estado: 'publicado',
-    visitas: 61,
-    reservas: 3,
-    emoji: '🐡',
-    destacado: true,
-  },
-  {
-    id: 'OF-2026-005',
-    especie: 'Mero',
-    caleta: 'Los Órganos',
-    fecha: '2026-06-25',
-    vencimiento: '2026-06-27',
-    pesoCapturo: 18,
-    pesoDisponible: 0,
-    precioPorKg: 22.00,
-    metodo: 'Artesanal (Espinel)',
-    estado: 'expirado',
-    visitas: 29,
-    reservas: 1,
-    emoji: '🐙',
-    destacado: false,
-  },
-  {
-    id: 'OF-2026-006',
-    especie: 'Caballa',
-    caleta: 'Parachique',
-    fecha: '2026-07-04',
-    vencimiento: '2026-07-06',
-    pesoCapturo: 80,
-    pesoDisponible: 80,
-    precioPorKg: 3.00,
-    metodo: 'Red de enmalle',
-    estado: 'revisión',
-    visitas: 4,
-    reservas: 0,
-    emoji: '🐟',
-    destacado: false,
-  },
-];
+const mapOferta = (item) => ({
+  id: item.id,
+  especie: item.especie,
+  caleta: item.caleta,
+  fecha: item.fecha_publicacion?.split('T')[0] ?? item.fecha_publicacion,
+  vencimiento: item.fecha_vencimiento?.split('T')[0] ?? item.fecha_vencimiento,
+  pesoCapturo: Number(item.peso_capturado_kg) || 0,
+  pesoDisponible: Number(item.peso_disponible_kg) || 0,
+  precioPorKg: Number(item.precio_por_kg) || 0,
+  estado: item.estado,
+  visitas: item.visitas ?? 0,
+  reservas: item.reservas ?? 0,
+  destacado: !!item.destacado,
+  emoji: '\u{1F41F}',
+  metodo: 'Artesanal',
+});
 
 // ── Estado config ─────────────────────────────────────────────────────────────
 const ESTADO_CFG = {
@@ -271,10 +191,42 @@ export default function MisOfertas() {
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [sortBy, setSortBy]           = useState('fecha');
   const [sortAsc, setSortAsc]         = useState(false);
-  const [ofertas, setOfertas]         = useState(OFERTAS);
+  const [ofertas, setOfertas]         = useState([]);
+  const [cargando, setCargando]       = useState(true);
+  const [error, setError]             = useState(null);
 
-  const handleDelete = (id) =>
-    setOfertas((prev) => prev.filter((o) => o.id !== id));
+  useAuth();
+
+  useEffect(() => {
+    let cancel = false;
+    setCargando(true);
+    setError(null);
+
+    api.get('/ofertas')
+      .then((res) => {
+        if (cancel) return;
+        const items = Array.isArray(res.data) ? res.data : [];
+        setOfertas(items.map(mapOferta));
+      })
+      .catch((err) => {
+        if (cancel) return;
+        setError(err.message || 'Error al cargar ofertas');
+      })
+      .finally(() => {
+        if (!cancel) setCargando(false);
+      });
+
+    return () => { cancel = true; };
+  }, []);
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/ofertas/${id}`);
+      setOfertas((prev) => prev.filter((o) => o.id !== id));
+    } catch {
+      setError('Error al eliminar la oferta');
+    }
+  };
 
   const toggleSort = (key) => {
     if (sortBy === key) setSortAsc(!sortAsc);
@@ -285,7 +237,7 @@ export default function MisOfertas() {
     .filter((o) => {
       const matchSearch =
         o.especie.toLowerCase().includes(search.toLowerCase()) ||
-        o.id.toLowerCase().includes(search.toLowerCase()) ||
+        String(o.id).toLowerCase().includes(search.toLowerCase()) ||
         o.caleta.toLowerCase().includes(search.toLowerCase());
       const matchEstado = filtroEstado === 'todos' || o.estado === filtroEstado;
       return matchSearch && matchEstado;
@@ -318,6 +270,15 @@ export default function MisOfertas() {
             <Plus size={16} /> Nueva Oferta
           </Link>
         </div>
+
+        {/* ── Error banner ── */}
+        {error && (
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+            <AlertCircle size={16} className="flex-shrink-0" />
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600 font-bold">&times;</button>
+          </div>
+        )}
 
         {/* ── Stats ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -368,7 +329,12 @@ export default function MisOfertas() {
         </div>
 
         {/* ── Grid de tarjetas ── */}
-        {filtered.length === 0 ? (
+        {cargando ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Loader2 size={32} className="text-slate-300 animate-spin mb-4" />
+            <p className="text-sm font-semibold text-slate-500">Cargando ofertas…</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl mb-4">🎣</div>
             <p className="text-sm font-semibold text-slate-600">No hay ofertas con ese filtro.</p>
@@ -389,7 +355,7 @@ export default function MisOfertas() {
         )}
 
         {/* Summary footer */}
-        {filtered.length > 0 && (
+        {!cargando && filtered.length > 0 && (
           <p className="text-xs text-slate-400 text-center">
             Mostrando {filtered.length} de {ofertas.length} ofertas
           </p>

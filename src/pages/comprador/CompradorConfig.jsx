@@ -1,7 +1,3 @@
-/**
- * CompradorConfig – Configuración de cuenta para compradores.
- * Simplificada respecto a la del pescador (sin datos de pesca/licencia).
- */
 import { useState } from 'react';
 import { User, Mail, Phone, Shield, Bell, Camera, Save, Check, Lock, Trash2, LogOut, ChevronRight } from 'lucide-react';
 import { CompradorLayout } from '../../layouts/CompradorLayout';
@@ -52,19 +48,39 @@ function AvatarUploader({ initials }) {
 }
 
 export default function CompradorConfig() {
-  const { auth, logout } = useAuth();
+  const { auth, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const [notifs, setNotifs] = useState({ reservas: true, precios: true, ofertas: false, seguridad: true });
   const [perfil, setPerfil] = useState({
     nombre:   auth?.nombre ?? '',
     email:    auth?.email  ?? '',
-    telefono: '',
+    telefono: auth?.telefono ?? '',
     empresa:  '',
   });
 
   const handleChange = (k) => (e) => setPerfil(p => ({...p, [k]: e.target.value}));
-  const handleSave   = (e) => { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 3000); };
+  const handleSave   = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSaving(true);
+    try {
+      await updateProfile({
+        nombre: perfil.nombre || undefined,
+        email: perfil.email || undefined,
+        telefono: perfil.telefono || undefined,
+        empresa: perfil.empresa || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const initials = auth?.nombre?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() ?? 'CL';
@@ -126,7 +142,9 @@ export default function CompradorConfig() {
             </div>
           </SectionCard>
 
-          <Button type="submit" fullWidth className="py-3 gap-2 text-sm bg-emerald-500 hover:bg-emerald-600">
+          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+
+          <Button type="submit" fullWidth className="py-3 gap-2 text-sm bg-emerald-500 hover:bg-emerald-600" disabled={saving}>
             {saved ? <><Check size={15} className="text-white"/> Cambios guardados</> : <><Save size={15}/> Guardar Cambios</>}
           </Button>
         </form>

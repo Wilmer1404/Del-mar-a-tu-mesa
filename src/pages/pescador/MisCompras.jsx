@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShoppingBag,
   Search,
@@ -16,18 +16,7 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const COMPRAS = [
-  { id: 'OC-2026-001', producto: 'Redes de Cerco Reforzadas', proveedor: 'Insumos Marinos SAC', fecha: '2026-07-01', cantidad: '2 unid.', total: 8840.00, estado: 'entregado' },
-  { id: 'OC-2026-002', producto: 'Combustible Diesel B5',     proveedor: 'Petromar Perú',       fecha: '2026-07-02', cantidad: '200 gl.',  total: 3300.00, estado: 'en_camino' },
-  { id: 'OC-2026-003', producto: 'Hielo en Escamas (500 kg)', proveedor: 'FríoMar Piura',       fecha: '2026-06-28', cantidad: '500 kg',   total: 750.00,  estado: 'entregado' },
-  { id: 'OC-2026-004', producto: 'Anzuelos Palangre #6',      proveedor: 'TacklePerú',          fecha: '2026-06-25', cantidad: '1000 u.',  total: 420.00,  estado: 'pendiente' },
-  { id: 'OC-2026-005', producto: 'Mantenimiento de Casco',    proveedor: 'Astillero El Chaco',  fecha: '2026-06-20', cantidad: '1 serv.',  total: 2800.00, estado: 'entregado' },
-  { id: 'OC-2026-006', producto: 'Motor Yamaha 40HP (repuesto)', proveedor: 'MotoMar Piura',   fecha: '2026-06-15', cantidad: '1 pieza',  total: 5600.00, estado: 'cancelado' },
-  { id: 'OC-2026-007', producto: 'GPS Garmin GPSMAP 78SC',   proveedor: 'TechPesca',           fecha: '2026-06-10', cantidad: '1 unid.',  total: 980.00,  estado: 'entregado' },
-  { id: 'OC-2026-008', producto: 'Botas de PVC impermeables', proveedor: 'SafeMar Equipos',    fecha: '2026-06-08', cantidad: '3 pares',  total: 270.00,  estado: 'entregado' },
-];
+import { api } from '../../services/api';
 
 const ESTADOS = {
   entregado:  { label: 'Entregado',   icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50',  border: 'border-emerald-200' },
@@ -38,7 +27,6 @@ const ESTADOS = {
 
 const PER_PAGE = 5;
 
-// ── Estado Badge ─────────────────────────────────────────────────────────────
 function EstadoBadge({ estado }) {
   const cfg = ESTADOS[estado] || ESTADOS.pendiente;
   const Icon = cfg.icon;
@@ -49,13 +37,41 @@ function EstadoBadge({ estado }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+function mapOrden(raw) {
+  return {
+    id: raw.id,
+    producto: raw.producto_nombre,
+    proveedor: raw.proveedor_nombre,
+    fecha: raw.fecha_orden ? raw.fecha_orden.slice(0, 10) : '',
+    cantidad: String(raw.cantidad ?? ''),
+    total: Number(raw.total) || 0,
+    estado: raw.estado,
+  };
+}
+
 export default function MisCompras() {
+  const [ordenes, setOrdenes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [page, setPage] = useState(1);
 
-  const filtered = COMPRAS.filter((c) => {
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    api.get('/ordenes')
+      .then((res) => {
+        const data = res.data?.data ?? res.data ?? [];
+        setOrdenes(Array.isArray(data) ? data.map(mapOrden) : []);
+      })
+      .catch((err) => {
+        setError(err.response?.data?.message || err.message || 'Error al carrar órdenes');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = ordenes.filter((c) => {
     const matchSearch =
       c.producto.toLowerCase().includes(search.toLowerCase()) ||
       c.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,9 +83,34 @@ export default function MisCompras() {
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const totalGastado = COMPRAS.reduce((acc, c) => acc + c.total, 0);
-  const entregadas = COMPRAS.filter((c) => c.estado === 'entregado').length;
-  const enCamino   = COMPRAS.filter((c) => c.estado === 'en_camino').length;
+  const totalGastado = ordenes.reduce((acc, c) => acc + c.total, 0);
+  const entregadas = ordenes.filter((c) => c.estado === 'entregado').length;
+  const enCamino   = ordenes.filter((c) => c.estado === 'en_camino').length;
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-screen-xl mx-auto space-y-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-screen-xl mx-auto space-y-6">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+            <p className="text-red-600 font-semibold">Error al cargar las órdenes</p>
+            <p className="text-red-500 text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -84,7 +125,7 @@ export default function MisCompras() {
         {/* ── Stats ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Total Gastado (MES)"  value={`S/ ${totalGastado.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`} sub="↓ -8% vs mes anterior" subColor="text-emerald-500" icon={DollarSign} iconBg="bg-red-50"     iconColor="text-red-500" />
-          <StatCard label="Órdenes Totales"       value={String(COMPRAS.length)}                 sub="Este mes"               subColor="text-slate-500"   icon={Package}    iconBg="bg-slate-100"  iconColor="text-slate-500" />
+          <StatCard label="Órdenes Totales"       value={String(ordenes.length)}                 sub="Este mes"               subColor="text-slate-500"   icon={Package}    iconBg="bg-slate-100"  iconColor="text-slate-500" />
           <StatCard label="Entregas Completadas"  value={String(entregadas)}                      sub="Sin incidentes"         subColor="text-emerald-500" icon={CheckCircle2} iconBg="bg-emerald-50" iconColor="text-emerald-500" />
           <StatCard label="En Camino"             value={String(enCamino)}                        sub="Próximas 48 hrs"        subColor="text-sky-500"    icon={Truck}      iconBg="bg-sky-50"    iconColor="text-sky-500" />
         </div>

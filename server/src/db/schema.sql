@@ -359,7 +359,7 @@ SELECT
   o.fecha_vencimiento,
   o.visitas,
   o.reservas,
-  EXTRACT(EPOCH FROM (o.fecha_vencimiento - CURRENT_DATE)) / 3600 AS horas_restantes,
+  EXTRACT(EPOCH FROM ((o.fecha_vencimiento - CURRENT_DATE) || ' days')::INTERVAL) / 3600 AS horas_restantes,
   o.created_at
 FROM ofertas o
 JOIN usuarios u ON u.id = o.pescador_id

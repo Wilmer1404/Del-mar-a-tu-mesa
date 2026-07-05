@@ -1,7 +1,11 @@
 
 import { Bell, Search, Menu } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export function TopBar({ onMenuClick }) {
+  const { auth } = useAuth();
+  const initial = auth?.nombre ? auth.nombre.charAt(0).toUpperCase() : 'U';
+
   return (
     <header className="bg-white border-b border-slate-100 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
       {/* Left: mobile menu + title */}
@@ -15,7 +19,9 @@ export function TopBar({ onMenuClick }) {
         </button>
         <div>
           <h1 className="text-base font-bold text-slate-900">Panel del Pescador</h1>
-          <p className="text-xs text-slate-400 hidden sm:block">Bienvenido de nuevo, Cap. Arturo</p>
+          <p className="text-xs text-slate-400 hidden sm:block">
+            {auth?.nombre ? `Bienvenido de nuevo, ${auth.nombre.split(' ')[0]}` : 'Panel del Pescador'}
+          </p>
         </div>
       </div>
 
@@ -34,12 +40,9 @@ export function TopBar({ onMenuClick }) {
       <div className="flex items-center gap-3">
         <button aria-label="Notificaciones" className="relative text-slate-500 hover:text-slate-800 transition-colors">
           <Bell size={20} />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
-            3
-          </span>
         </button>
         <div className="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-sm">
-          A
+          {initial}
         </div>
       </div>
     </header>

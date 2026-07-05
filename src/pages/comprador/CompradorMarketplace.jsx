@@ -1,9 +1,4 @@
-/**
- * Marketplace para el Comprador.
- * Usa el mismo contenido que el marketplace del pescador,
- * pero con CompradorLayout en lugar de DashboardLayout.
- */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search, SlidersHorizontal, ShoppingCart, Heart, Star,
@@ -11,18 +6,7 @@ import {
   TrendingUp, Zap, Fish,
 } from 'lucide-react';
 import { CompradorLayout } from '../../layouts/CompradorLayout';
-
-const PRODUCTOS = [
-  { id: 1, especie: 'Huachinango del Pacífico', vendedor: 'Cap. Arturo Prat',     caleta: 'Parachique',   precioPorKg: 32.00, kgDisponible: 28.5,  emoji: '🐟', rating: 4.9, certificado: true,  destacado: true,  horasRestantes: 18, categoria: 'peces',      descripcion: 'Fresco de la mañana. Talla mediana. Captura artesanal certificada por Sernapesca.' },
-  { id: 2, especie: 'Atún Aleta Azul',          vendedor: 'Roberto Mena',         caleta: 'Yacila',       precioPorKg: 85.50, kgDisponible: 120,   emoji: '🐠', rating: 4.8, certificado: true,  destacado: true,  horasRestantes: 6,  categoria: 'peces',      descripcion: 'Palangre de altura, ideal para sashimi y sushi premium. Lote grande.' },
-  { id: 3, especie: 'Langostino Jumbo',          vendedor: 'Luis Saavedra',        caleta: 'Puerto Paita', precioPorKg: 48.00, kgDisponible: 22.5,  emoji: '🦐', rating: 5.0, certificado: true,  destacado: false, horasRestantes: 30, categoria: 'crustaceos', descripcion: 'Buceo artesanal, zona de protección. Tamaño extra-jumbo.' },
-  { id: 4, especie: 'Corvina',                   vendedor: 'Cap. Jorge Castillo',  caleta: 'El Ñuro',      precioPorKg: 14.00, kgDisponible: 45,    emoji: '🐡', rating: 4.7, certificado: false, destacado: false, horasRestantes: 40, categoria: 'peces',      descripcion: 'Red de enmalle, captura nocturna. Stock amplio.' },
-  { id: 5, especie: 'Mero',                      vendedor: 'Ana Flores',           caleta: 'Los Órganos',  precioPorKg: 22.00, kgDisponible: 18,    emoji: '🐙', rating: 4.6, certificado: true,  destacado: false, horasRestantes: 12, categoria: 'peces',      descripcion: 'Espinel artesanal. Muy fresco, capturado esta madrugada.' },
-  { id: 6, especie: 'Caballa',                   vendedor: 'Miguel Torres',        caleta: 'Bayóvar',      precioPorKg: 3.00,  kgDisponible: 200,   emoji: '🐟', rating: 4.5, certificado: false, destacado: false, horasRestantes: 48, categoria: 'peces',      descripcion: 'Precio especial por volumen mayor a 50 kg.' },
-  { id: 7, especie: 'Pota Patagónica',           vendedor: 'Empresa MarSur SAC',   caleta: 'Parachique',   precioPorKg: 4.50,  kgDisponible: 500,   emoji: '🦑', rating: 4.3, certificado: true,  destacado: false, horasRestantes: 72, categoria: 'cefalopodos',descripcion: 'Procesado en planta certificada. Ideal para exportación.' },
-  { id: 8, especie: 'Pargo Rojo',                vendedor: 'Cap. Carlos Vega',     caleta: 'Yacila',       precioPorKg: 20.00, kgDisponible: 35,    emoji: '🐠', rating: 4.9, certificado: true,  destacado: true,  horasRestantes: 24, categoria: 'peces',      descripcion: 'Alta demanda en restaurantes de Lima.' },
-  { id: 9, especie: 'Cangrejo Nativo',           vendedor: 'Rosa Quispe',          caleta: 'Bayóvar',      precioPorKg: 35.00, kgDisponible: 8,     emoji: '🦀', rating: 4.8, certificado: false, destacado: false, horasRestantes: 8,  categoria: 'crustaceos', descripcion: '¡Stock muy limitado! Trampa artesanal, captura selectiva.' },
-];
+import { api } from '../../services/api';
 
 const CATEGORIAS = [
   { key: 'todos', label: 'Todos', emoji: '🌊' },
@@ -37,6 +21,29 @@ const SORT_OPTIONS = [
   { value: 'precio_desc',label: 'Precio: mayor a menor' },
   { value: 'rating',     label: 'Mejor valorados' },
 ];
+
+const EMOJIS = { peces: '🐟', crustaceos: '🦐', cefalopodos: '🦑' };
+
+function mapOferta(item) {
+  const horasRestantes = item.fecha_vencimiento
+    ? Math.max(0, Math.floor((new Date(item.fecha_vencimiento) - new Date()) / (1000 * 60 * 60)))
+    : 0;
+  return {
+    id: item.id,
+    especie: item.especie,
+    vendedor: item.vendedor_nombre,
+    caleta: item.caleta,
+    precioPorKg: Number(item.precio_por_kg) || 0,
+    kgDisponible: Number(item.peso_disponible_kg) || 0,
+    emoji: EMOJIS[item.categoria] || '🐟',
+    rating: 4.8,
+    certificado: !!item.certificado,
+    destacado: !!item.destacado,
+    horasRestantes,
+    categoria: item.categoria,
+    descripcion: item.descripcion,
+  };
+}
 
 function useCart() {
   const [cart, setCart] = useState([]);
@@ -139,13 +146,22 @@ function CartPanel({ cart, onRemove, total, onClose }) {
 }
 
 export default function CompradorMarketplace() {
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch]     = useState('');
   const [categoria, setCategoria] = useState('todos');
   const [sort, setSort]         = useState('reciente');
   const [cartOpen, setCartOpen] = useState(false);
   const { cart, add, remove, total } = useCart();
 
-  const filtered = PRODUCTOS
+  useEffect(() => {
+    api.get('/ofertas/marketplace')
+      .then(res => setProductos((res.data || []).map(mapOferta)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = productos
     .filter(p => {
       const matchSearch = p.especie.toLowerCase().includes(search.toLowerCase()) || p.vendedor.toLowerCase().includes(search.toLowerCase()) || p.caleta.toLowerCase().includes(search.toLowerCase());
       const matchCat = categoria === 'todos' || p.categoria === categoria;
@@ -160,6 +176,16 @@ export default function CompradorMarketplace() {
 
   const destacados = filtered.filter(p => p.destacado);
   const normales   = filtered.filter(p => !p.destacado);
+
+  if (loading) {
+    return (
+      <CompradorLayout>
+        <div className="max-w-screen-xl mx-auto flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+        </div>
+      </CompradorLayout>
+    );
+  }
 
   return (
     <CompradorLayout>
@@ -181,10 +207,10 @@ export default function CompradorMarketplace() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Ofertas disponibles', value: PRODUCTOS.length, icon: Store, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-            { label: 'Vendedores activos',   value: new Set(PRODUCTOS.map(p => p.vendedor)).size, icon: Fish, color: 'text-sky-500', bg: 'bg-sky-50' },
-            { label: 'Ton. disponibles',     value: `${(PRODUCTOS.reduce((a,p) => a+p.kgDisponible,0)/1000).toFixed(1)}t`, icon: Package, color: 'text-amber-500', bg: 'bg-amber-50' },
-            { label: 'Precio promedio/kg',   value: `S/ ${(PRODUCTOS.reduce((a,p) => a+p.precioPorKg,0)/PRODUCTOS.length).toFixed(2)}`, icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-50' },
+            { label: 'Ofertas disponibles', value: productos.length, icon: Store, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+            { label: 'Vendedores activos',   value: new Set(productos.map(p => p.vendedor)).size, icon: Fish, color: 'text-sky-500', bg: 'bg-sky-50' },
+            { label: 'Ton. disponibles',     value: `${(productos.reduce((a,p) => a+p.kgDisponible,0)/1000).toFixed(1)}t`, icon: Package, color: 'text-amber-500', bg: 'bg-amber-50' },
+            { label: 'Precio promedio/kg',   value: `S/ ${productos.length ? (productos.reduce((a,p) => a+p.precioPorKg,0)/productos.length).toFixed(2) : '0.00'}`, icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-50' },
           ].map(({label, value, icon: Icon, color, bg}) => (
             <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3 flex items-center gap-3">
               <div className={`${bg} p-2 rounded-xl`}><Icon size={16} className={color}/></div>

@@ -54,8 +54,8 @@ export function Sidebar() {
   const initials = auth?.nombre
     ? auth.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
     : 'P';
-  const nombre  = auth?.nombre  ?? 'Cap. Arturo Prat';
-  const caleta  = auth?.caleta  ?? 'Panel del Pescador';
+  const nombre  = auth?.nombre  || 'Usuario';
+  const caleta  = auth?.caleta  || 'Panel del Pescador';
 
   return (
     <aside className="flex flex-col h-full bg-slate-900 text-white w-64 flex-shrink-0">

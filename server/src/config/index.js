@@ -1,16 +1,25 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
+const required = (key, fallback) => {
+  const val = process.env[key] || fallback;
+  if (!val && !fallback) {
+    throw new Error(`[CONFIG] ${key} no está definido en las variables de entorno`);
+  }
+  return val;
+};
+
 module.exports = {
+  env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '3001'),
   db: {
-    host:     process.env.DB_HOST || 'localhost',
-    port:     parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'delmar_a_tumesa',
-    user:     process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
+    host: required('DB_HOST', 'localhost'),
+    port: parseInt(required('DB_PORT', '5432')),
+    database: required('DB_NAME'),
+    user: required('DB_USER', 'postgres'),
+    password: required('DB_PASSWORD'),
   },
   jwt: {
-    secret:     process.env.JWT_SECRET || 'dev-secret-change-in-production',
-    expiresIn:  process.env.JWT_EXPIRES_IN || '7d',
+    secret: required('JWT_SECRET'),
+    expiresIn: required('JWT_EXPIRES_IN', '7d'),
   },
 };

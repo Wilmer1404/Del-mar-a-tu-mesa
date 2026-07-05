@@ -75,13 +75,14 @@ function RolCard({ rol, selected, onSelect }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Register() {
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate  = useNavigate();
 
   const [step, setStep]     = useState(1); // 1 = elegir rol, 2 = datos
   const [rol, setRol]       = useState('');
   const [form, setForm]     = useState({ nombre: '', email: '', telefono: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
 
   const handleChange = (k) => (e) => setForm(p => ({...p, [k]: e.target.value}));
 
@@ -92,13 +93,16 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800)); // simular API
-
-    login({ nombre: form.nombre, email: form.email, rol });
-
-    // Redirigir según rol
-    navigate(rol === 'pescador' ? '/pescador/dashboard' : '/comprador/marketplace');
+    try {
+      const session = await register({ nombre: form.nombre, email: form.email, password: form.password, telefono: form.telefono, rol });
+      navigate(session.rol === 'pescador' ? '/pescador/dashboard' : '/comprador/marketplace');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -184,6 +188,8 @@ export default function Register() {
               <label htmlFor="password" className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Contraseña</label>
               <Input id="password" type="password" placeholder="Mínimo 8 caracteres" icon={Lock} required value={form.password} onChange={handleChange('password')} />
             </div>
+
+            {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
 
             <Checkbox
               id="terms"

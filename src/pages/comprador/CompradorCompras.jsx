@@ -1,19 +1,7 @@
-/**
- * Mis Compras del Comprador – mismo contenido que MisCompras del pescador
- * pero envuelto en CompradorLayout.
- */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Filter, Eye, Download, CheckCircle2, Clock, XCircle, Truck, ChevronLeft, ChevronRight, Package, DollarSign } from 'lucide-react';
 import { CompradorLayout } from '../../layouts/CompradorLayout';
-
-const COMPRAS = [
-  { id: 'OC-2026-001', producto: 'Huachinango del Pacífico', proveedor: 'Cap. Arturo Prat',    fecha: '2026-07-03', cantidad: '12 kg',   total: 384.00, estado: 'entregado' },
-  { id: 'OC-2026-002', producto: 'Atún Aleta Azul',          proveedor: 'Roberto Mena',         fecha: '2026-07-01', cantidad: '5 kg',    total: 427.50, estado: 'en_camino' },
-  { id: 'OC-2026-003', producto: 'Langostino Jumbo',          proveedor: 'Luis Saavedra',        fecha: '2026-06-28', cantidad: '8 kg',    total: 384.00, estado: 'entregado' },
-  { id: 'OC-2026-004', producto: 'Corvina',                   proveedor: 'Cap. Jorge Castillo',  fecha: '2026-06-25', cantidad: '20 kg',   total: 280.00, estado: 'pendiente' },
-  { id: 'OC-2026-005', producto: 'Pargo Rojo',                proveedor: 'Cap. Carlos Vega',     fecha: '2026-06-20', cantidad: '10 kg',   total: 200.00, estado: 'entregado' },
-  { id: 'OC-2026-006', producto: 'Cangrejo Nativo',           proveedor: 'Rosa Quispe',          fecha: '2026-06-15', cantidad: '3 kg',    total: 105.00, estado: 'cancelado' },
-];
+import { api } from '../../services/api';
 
 const ESTADOS = {
   entregado: { label: 'Entregado',  icon: CheckCircle2, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
@@ -23,6 +11,18 @@ const ESTADOS = {
 };
 
 const PER_PAGE = 5;
+
+function mapOrden(raw) {
+  return {
+    id: raw.id,
+    producto: raw.producto_nombre,
+    proveedor: raw.proveedor_nombre,
+    fecha: raw.fecha_orden ? raw.fecha_orden.slice(0, 10) : '',
+    cantidad: String(raw.cantidad ?? ''),
+    total: Number(raw.total) || 0,
+    estado: raw.estado,
+  };
+}
 
 function EstadoBadge({ estado }) {
   const cfg = ESTADOS[estado] ?? ESTADOS.pendiente;
@@ -35,11 +35,28 @@ function EstadoBadge({ estado }) {
 }
 
 export default function CompradorCompras() {
+  const [ordenes, setOrdenes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [page, setPage]     = useState(1);
 
-  const filtered = COMPRAS.filter(c => {
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    api.get('/ordenes')
+      .then((res) => {
+        const data = res.data?.data ?? res.data ?? [];
+        setOrdenes(Array.isArray(data) ? data.map(mapOrden) : []);
+      })
+      .catch((err) => {
+        setError(err.response?.data?.message || err.message || 'Error al cargar órdenes');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = ordenes.filter(c => {
     const m = c.producto.toLowerCase().includes(search.toLowerCase()) || c.id.toLowerCase().includes(search.toLowerCase()) || c.proveedor.toLowerCase().includes(search.toLowerCase());
     const e = filtro === 'todos' || c.estado === filtro;
     return m && e;
@@ -47,7 +64,32 @@ export default function CompradorCompras() {
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
-  const totalGastado = COMPRAS.reduce((a,c) => a+c.total, 0);
+  const totalGastado = ordenes.reduce((a,c) => a+c.total, 0);
+
+  if (loading) {
+    return (
+      <CompradorLayout>
+        <div className="max-w-screen-xl mx-auto space-y-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+          </div>
+        </div>
+      </CompradorLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <CompradorLayout>
+        <div className="max-w-screen-xl mx-auto space-y-6">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+            <p className="text-red-600 font-semibold">Error al cargar las órdenes</p>
+            <p className="text-red-500 text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      </CompradorLayout>
+    );
+  }
 
   return (
     <CompradorLayout>
@@ -61,9 +103,9 @@ export default function CompradorCompras() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Total Gastado',      value: `S/ ${totalGastado.toLocaleString('es-PE',{minimumFractionDigits:2})}`, icon: DollarSign,   bg: 'bg-red-50',     ic: 'text-red-500' },
-            { label: 'Órdenes Totales',    value: COMPRAS.length,                                                         icon: Package,      bg: 'bg-slate-100',  ic: 'text-slate-500' },
-            { label: 'Completadas',        value: COMPRAS.filter(c => c.estado === 'entregado').length,                    icon: CheckCircle2, bg: 'bg-emerald-50', ic: 'text-emerald-500' },
-            { label: 'En Camino',          value: COMPRAS.filter(c => c.estado === 'en_camino').length,                    icon: Truck,        bg: 'bg-sky-50',     ic: 'text-sky-500' },
+            { label: 'Órdenes Totales',    value: ordenes.length,                                                         icon: Package,      bg: 'bg-slate-100',  ic: 'text-slate-500' },
+            { label: 'Completadas',        value: ordenes.filter(c => c.estado === 'entregado').length,                    icon: CheckCircle2, bg: 'bg-emerald-50', ic: 'text-emerald-500' },
+            { label: 'En Camino',          value: ordenes.filter(c => c.estado === 'en_camino').length,                    icon: Truck,        bg: 'bg-sky-50',     ic: 'text-sky-500' },
           ].map(({label, value, icon: Icon, bg, ic}) => (
             <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center gap-3">
               <div className={`${bg} p-2.5 rounded-xl`}><Icon size={18} className={ic}/></div>

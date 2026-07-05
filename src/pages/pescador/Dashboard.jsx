@@ -1,56 +1,38 @@
-
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
 import {
-  DollarSign,
-  Weight,
-  Tag,
-  Star,
-  Plus,
-  Eye,
-  Pencil,
-  Trash2,
-  QrCode,
-  MapPin,
-  ArrowRight,
-  TrendingUp,
+  DollarSign, Weight, Tag, Star,
+  Plus, Eye, Pencil, Trash2, QrCode, MapPin, ArrowRight, TrendingUp,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../../services/api';
 
-// ── Mock data ────────────────────────────────────────────────────────────────
-const STATS = [
-  { label: 'Total Ventas (MES)', value: 'S/ 4,250.00', sub: '↑ +12% este mes', subColor: 'text-emerald-500', icon: DollarSign, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
-  { label: 'KG Vendidos', value: '842.5 Kg', sub: '↑ +8% vs semana pasada', subColor: 'text-sky-500', icon: Weight, iconBg: 'bg-sky-50', iconColor: 'text-sky-500' },
-  { label: 'Ofertas Activas', value: '06', sub: 'en la Lonja', subColor: 'text-amber-500', icon: Tag, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
-  { label: 'Calificación', value: '4.9 ★★★★★', sub: 'de compradores', subColor: 'text-yellow-500', icon: Star, iconBg: 'bg-yellow-50', iconColor: 'text-yellow-500' },
-];
-
-const CAPTURAS = [
-  { id: 1, nombre: 'Huachinango del Pacífico', lugar: 'Puerto Madero, Az', peso: '40.5', precio: '32.00', estado: 'PUBLICADO', estadoColor: 'bg-emerald-100 text-emerald-700' },
-  { id: 2, nombre: 'Atún Aleta Azul', lugar: 'Puerto Madero', peso: '120.0', precio: '85.50', estado: 'PENDIENTE', estadoColor: 'bg-amber-100 text-amber-700' },
-  { id: 3, nombre: 'Langostino Jumbo', lugar: 'Bahía Central Bay', peso: '22.5', precio: '48.00', estado: 'EN REVISIÓN', estadoColor: 'bg-sky-100 text-sky-700' },
-];
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 function CapturaRow({ captura }) {
+  const estadoColor = {
+    publicado: 'bg-emerald-100 text-emerald-700',
+    pendiente: 'bg-amber-100 text-amber-700',
+    en_revision: 'bg-sky-100 text-sky-700',
+    vendido: 'bg-purple-100 text-purple-700',
+    expirado: 'bg-slate-100 text-slate-500',
+  }[captura.estado] || 'bg-slate-100 text-slate-500';
+
   return (
     <tr className="border-b border-slate-50 hover:bg-slate-50/70 transition-colors">
       <td className="py-3 px-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center text-sky-500 flex-shrink-0 text-lg">
-            🐟
-          </div>
+          <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center text-sky-500 flex-shrink-0 text-lg">🐟</div>
           <div>
-            <p className="text-sm font-semibold text-slate-800 leading-tight">{captura.nombre}</p>
-            <p className="text-xs text-slate-400">{captura.lugar}</p>
+            <p className="text-sm font-semibold text-slate-800 leading-tight">{captura.especie}</p>
+            <p className="text-xs text-slate-400">{captura.caleta_origen}</p>
           </div>
         </div>
       </td>
-      <td className="py-3 px-4 text-sm text-slate-700 font-medium">{captura.peso} Kg</td>
-      <td className="py-3 px-4 text-sm text-slate-700 font-medium">S/ {captura.precio}</td>
+      <td className="py-3 px-4 text-sm text-slate-700 font-medium">{parseFloat(captura.cantidad_kg).toFixed(1)} Kg</td>
+      <td className="py-3 px-4 text-sm text-slate-700 font-medium">S/ {parseFloat(captura.precio_por_kg).toFixed(2)}</td>
       <td className="py-3 px-4">
-        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${captura.estadoColor}`}>
-          {captura.estado}
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${estadoColor}`}>
+          {captura.estado.toUpperCase().replace(/_/g, ' ')}
         </span>
       </td>
       <td className="py-3 px-4">
@@ -64,31 +46,49 @@ function CapturaRow({ captura }) {
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
 export default function PescadorDashboard() {
   const navigate = useNavigate();
+  const [dashboard, setDashboard] = useState(null);
+  const [capturas, setCapturas] = useState([]);
+  const [preciosLonja, setPreciosLonja] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      api.get('/reportes/dashboard'),
+      api.get('/capturas?limit=5'),
+      api.get('/precios/lonja'),
+    ]).then(([dashRes, captRes, preciosRes]) => {
+      setDashboard(dashRes.data);
+      setCapturas(captRes.data || []);
+      setPreciosLonja(preciosRes.data || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const stats = dashboard ? [
+    { label: 'Total Ventas (MES)', value: `S/ ${(dashboard.total_ventas_mes || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}`, sub: 'del mes actual', subColor: 'text-emerald-500', icon: DollarSign, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+    { label: 'Capturas (MES)', value: `${dashboard.capturas_mes || 0}`, sub: 'registradas este mes', subColor: 'text-sky-500', icon: Weight, iconBg: 'bg-sky-50', iconColor: 'text-sky-500' },
+    { label: 'Ofertas Activas', value: `${dashboard.ofertas_activas || 0}`, sub: 'en la Lonja', subColor: 'text-amber-500', icon: Tag, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
+    { label: 'Ofertas Vendidas', value: `${dashboard.ofertas_vendidas || 0}`, sub: 'totales', subColor: 'text-yellow-500', icon: Star, iconBg: 'bg-yellow-50', iconColor: 'text-yellow-500' },
+  ] : [];
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-screen-xl mx-auto">
 
-        {/* ── Stats Row ── */}
+        {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {STATS.map((s) => (
-            <StatCard key={s.label} {...s} />
-          ))}
+          {stats.map((s) => (<StatCard key={s.label} {...s} />))}
         </div>
 
-        {/* ── Main Grid: Capturas + Insumos ── */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
           {/* Capturas Table */}
           <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h2 className="text-sm font-bold text-slate-900">Mis Capturas Recientes</h2>
-              <Link
-                to="/pescador/captura"
-                className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-sky-600 transition-colors"
-              >
+              <Link to="/pescador/captura" className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-sky-600 transition-colors">
                 <Plus size={14} /> Registrar Nueva
               </Link>
             </div>
@@ -104,7 +104,9 @@ export default function PescadorDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {CAPTURAS.map((c) => <CapturaRow key={c.id} captura={c} />)}
+                  {capturas.length === 0 ? (
+                    <tr><td colSpan={5} className="py-8 text-center text-sm text-slate-400">Aún no tienes capturas registradas.</td></tr>
+                  ) : capturas.map((c) => (<CapturaRow key={c.id} captura={c} />))}
                 </tbody>
               </table>
             </div>
@@ -115,6 +117,7 @@ export default function PescadorDashboard() {
             </div>
           </div>
 
+          {/* Precios de Lonja */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -122,31 +125,32 @@ export default function PescadorDashboard() {
                 <h3 className="text-sm font-bold text-slate-900">Precios de Lonja</h3>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                El precio de la Corvina subió un <span className="text-emerald-600 font-bold">15%</span> hoy. ¡Buen momento para vender!
+                Últimos precios actualizados del mercado mayorista.
               </p>
               <div className="space-y-2">
-                {[
-                  { name: 'Huachinango', price: 'S/ 32.00', change: '+5%', up: true },
-                  { name: 'Atún Aleta', price: 'S/ 85.50', change: '+12%', up: true },
-                  { name: 'Langostino', price: 'S/ 48.00', change: '-3%', up: false },
-                ].map((item) => (
-                  <div key={item.name} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-slate-50">
-                    <span className="text-sm text-slate-600 font-medium">{item.name}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-slate-900">{item.price}</span>
-                      <span className={`text-xs font-bold ${item.up ? 'text-emerald-500' : 'text-red-500'}`}>{item.change}</span>
+                {preciosLonja.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">Sin precios disponibles.</p>
+                ) : preciosLonja.map((item) => {
+                  const change = parseFloat(item.cambio_pct) || 0;
+                  return (
+                    <div key={item.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-slate-50">
+                      <span className="text-sm text-slate-600 font-medium">{item.especie}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-slate-900">S/ {parseFloat(item.precio).toFixed(2)}</span>
+                        <span className={`text-xs font-bold ${change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {change >= 0 ? '+' : ''}{item.cambio_pct}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── Bottom Row: QR + Mapa ── */}
+        {/* Bottom Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Trazabilidad QR */}
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <QrCode size={20} className="text-sky-400" />
@@ -160,7 +164,6 @@ export default function PescadorDashboard() {
             </button>
           </div>
 
-          {/* Mapa de Caletas */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
@@ -179,7 +182,6 @@ export default function PescadorDashboard() {
                 </div>
               </div>
             </div>
-            {/* Map Placeholder */}
             <div className="relative h-52 bg-gradient-to-br from-sky-200 to-blue-400 overflow-hidden">
               <div className="absolute inset-0 opacity-30 text-[80px] flex items-center justify-center select-none">🗺️</div>
               <button onClick={() => navigate('/pescador/mapa')} className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-slate-900 transition-colors flex items-center gap-1.5">

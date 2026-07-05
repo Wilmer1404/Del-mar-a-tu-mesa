@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   QrCode,
   Plus,
@@ -14,15 +14,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const LOTES = [
-  { id: 'LT-20268703-001', especie: 'Huachinango del Pacífico', caleta: 'Parachique', fecha: '2026-07-03', peso: '40.5 kg', precio: 'S/ 32.00/kg', estado: 'certificado',  metodo: 'Artesanal (Espinel)', color: '#10b981' },
-  { id: 'LT-20268703-002', especie: 'Atún Aleta Azul',          caleta: 'Yacila',       fecha: '2026-07-02', peso: '120 kg',  precio: 'S/ 85.50/kg', estado: 'verificado',   metodo: 'Palangre',            color: '#0ea5e9' },
-  { id: 'LT-20268703-003', especie: 'Langostino Jumbo',         caleta: 'Puerto Paita', fecha: '2026-06-30', peso: '22.5 kg', precio: 'S/ 48.00/kg', estado: 'pendiente',    metodo: 'Buceo',               color: '#f59e0b' },
-  { id: 'LT-20268703-004', especie: 'Corvina',                  caleta: 'El Ñuro',      fecha: '2026-06-28', peso: '55 kg',   precio: 'S/ 14.00/kg', estado: 'certificado',  metodo: 'Red de enmalle',      color: '#10b981' },
-  { id: 'LT-20268703-005', especie: 'Mero',                     caleta: 'Los Órganos',  fecha: '2026-06-25', peso: '18 kg',   precio: 'S/ 22.00/kg', estado: 'expirado',     metodo: 'Artesanal (Espinel)', color: '#ef4444' },
-];
+import { api } from '../../services/api';
 
 const ESTADO_CFG = {
   certificado: { label: 'Certificado', color: 'text-emerald-700', bg: 'bg-emerald-50',  border: 'border-emerald-200', Icon: BadgeCheck },
@@ -31,30 +23,17 @@ const ESTADO_CFG = {
   expirado:    { label: 'Expirado',    color: 'text-red-600',     bg: 'bg-red-50',      border: 'border-red-200',     Icon: XCircle },
 };
 
-// ── QR Visual Placeholder ─────────────────────────────────────────────────────
-function QrPlaceholder({ seed = 1, size = 'md' }) {
-  const dim = size === 'sm' ? 64 : size === 'lg' ? 160 : 100;
-  const cells = size === 'sm' ? 25 : size === 'lg' ? 49 : 36;
-  const rng = (i) => ((seed * 9301 + i * 49297 + 233) % 233280) / 233280;
-  return (
-    <div
-      className="bg-slate-900 p-2 rounded-lg flex-shrink-0"
-      style={{ width: dim, height: dim }}
-    >
-      <div
-        className="w-full h-full grid gap-px"
-        style={{ gridTemplateColumns: `repeat(${Math.sqrt(cells)}, 1fr)` }}
-      >
-        {Array.from({ length: cells }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-[1px]"
-            style={{ background: rng(i) > 0.45 ? 'white' : 'transparent' }}
-          />
-        ))}
-      </div>
-    </div>
-  );
+function mapLote(raw) {
+  return {
+    id: raw.id,
+    especie: raw.especie,
+    caleta: raw.caleta,
+    fecha: raw.fecha_captura,
+    peso: `${raw.peso_kg} kg`,
+    precio: `S/ ${raw.precio_kg}/kg`,
+    estado: raw.estado,
+    metodo: raw.metodo_pesca,
+  };
 }
 
 // ── Estado Badge ──────────────────────────────────────────────────────────────
@@ -66,6 +45,22 @@ function EstadoBadge({ estado }) {
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
       <Icon size={11} /> {cfg.label}
     </span>
+  );
+}
+
+// ── Código de Trazabilidad Block ─────────────────────────────────────────────
+function CodigoTrazabilidad({ id, size = 'md' }) {
+  const dim = size === 'sm' ? 64 : size === 'lg' ? 160 : 100;
+  return (
+    <div
+      className="bg-slate-900 p-2 rounded-lg flex-shrink-0 flex flex-col items-center justify-center gap-1"
+      style={{ width: dim, height: dim }}
+    >
+      <QrCode size={size === 'sm' ? 18 : 28} className="text-sky-400" />
+      <span className={`${size === 'sm' ? 'text-[6px]' : 'text-[8px]'} text-slate-300 font-mono text-center leading-tight`}>
+        {id}
+      </span>
+    </div>
   );
 }
 
@@ -91,9 +86,9 @@ function LoteDetailPanel({ lote, onClose }) {
             <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">×</button>
           </div>
           <div className="flex items-center gap-5">
-            <QrPlaceholder seed={lote.id.length} size="lg" />
+            <CodigoTrazabilidad id={lote.id} size="lg" />
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Batch ID</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Código de Trazabilidad</p>
               <div className="flex items-center gap-2">
                 <p className="font-mono font-bold text-base">{lote.id}</p>
                 <button onClick={copyId} title="Copiar ID" className="text-slate-400 hover:text-sky-400 transition-colors">
@@ -142,8 +137,33 @@ function LoteDetailPanel({ lote, onClose }) {
 export default function TrazabilidadQR() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
+  const [lotes, setLotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = LOTES.filter(
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    api.get('/lotes')
+      .then((res) => {
+        if (cancelled) return;
+        const items = (res.data || []).map(mapLote);
+        setLotes(items);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message || 'Error al cargar lotes');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = lotes.filter(
     (l) =>
       l.especie.toLowerCase().includes(search.toLowerCase()) ||
       l.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -169,10 +189,10 @@ export default function TrazabilidadQR() {
         {/* Stats rápidas */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Total Lotes',    value: LOTES.length,                                          color: 'text-slate-900', bg: 'bg-white' },
-            { label: 'Certificados',   value: LOTES.filter(l => l.estado === 'certificado').length,  color: 'text-emerald-700', bg: 'bg-emerald-50' },
-            { label: 'Verificados',    value: LOTES.filter(l => l.estado === 'verificado').length,   color: 'text-sky-700',    bg: 'bg-sky-50' },
-            { label: 'Pendientes',     value: LOTES.filter(l => l.estado === 'pendiente').length,    color: 'text-amber-700',  bg: 'bg-amber-50' },
+            { label: 'Total Lotes',    value: lotes.length,                                          color: 'text-slate-900', bg: 'bg-white' },
+            { label: 'Certificados',   value: lotes.filter(l => l.estado === 'certificado').length,  color: 'text-emerald-700', bg: 'bg-emerald-50' },
+            { label: 'Verificados',    value: lotes.filter(l => l.estado === 'verificado').length,   color: 'text-sky-700',    bg: 'bg-sky-50' },
+            { label: 'Pendientes',     value: lotes.filter(l => l.estado === 'pendiente').length,    color: 'text-amber-700',  bg: 'bg-amber-50' },
           ].map((s) => (
             <div key={s.label} className={`${s.bg} rounded-2xl border border-slate-100 shadow-sm p-5`}>
               <p className={`text-2xl font-extrabold ${s.color}`}>{s.value}</p>
@@ -195,15 +215,19 @@ export default function TrazabilidadQR() {
           </div>
 
           <div className="divide-y divide-slate-50">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <p className="text-center text-slate-400 text-sm py-16">Cargando lotes…</p>
+            ) : error ? (
+              <p className="text-center text-red-500 text-sm py-16">{error}</p>
+            ) : filtered.length === 0 ? (
               <p className="text-center text-slate-400 text-sm py-16">No se encontraron lotes.</p>
-            ) : filtered.map((lote, idx) => (
+            ) : filtered.map((lote) => (
               <div
                 key={lote.id}
                 className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/70 transition-colors cursor-pointer group"
                 onClick={() => setSelected(lote)}
               >
-                <QrPlaceholder seed={idx + 1} size="sm" />
+                <CodigoTrazabilidad id={lote.id} size="sm" />
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

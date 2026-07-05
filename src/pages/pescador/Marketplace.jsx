@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -18,46 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const PRODUCTOS = [
-  {
-    id: 1, especie: 'Huachinango del Pacífico', vendedor: 'Cap. Arturo Prat',     caleta: 'Parachique',    precioPorKg: 32.00,  kgDisponible: 28.5,  emoji: '🐟', rating: 4.9, certificado: true,  destacado: true,  horasRestantes: 18, categoria: 'peces',
-    descripcion: 'Fresco de la mañana. Talla mediana, sin daños. Captura artesanal certificada por Sernapesca.',
-  },
-  {
-    id: 2, especie: 'Atún Aleta Azul',          vendedor: 'Roberto Mena',        caleta: 'Yacila',        precioPorKg: 85.50,  kgDisponible: 120,   emoji: '🐠', rating: 4.8, certificado: true,  destacado: true,  horasRestantes: 6,  categoria: 'peces',
-    descripcion: 'Palangre de altura, ideal para sashimi y sushi premium. Lote grande disponible.',
-  },
-  {
-    id: 3, especie: 'Langostino Jumbo',          vendedor: 'Luis Saavedra',       caleta: 'Puerto Paita',  precioPorKg: 48.00,  kgDisponible: 22.5,  emoji: '🦐', rating: 5.0, certificado: true,  destacado: false, horasRestantes: 30, categoria: 'crustaceos',
-    descripcion: 'Buceo artesanal, zona de protección. Tamaño extra-jumbo, ideal para restaurantes.',
-  },
-  {
-    id: 4, especie: 'Corvina',                   vendedor: 'Cap. Jorge Castillo', caleta: 'El Ñuro',       precioPorKg: 14.00,  kgDisponible: 45,    emoji: '🐡', rating: 4.7, certificado: false, destacado: false, horasRestantes: 40, categoria: 'peces',
-    descripcion: 'Red de enmalle, captura nocturna. Stock amplio, buen precio para distribuidores.',
-  },
-  {
-    id: 5, especie: 'Mero',                      vendedor: 'Ana Flores',          caleta: 'Los Órganos',   precioPorKg: 22.00,  kgDisponible: 18,    emoji: '🐙', rating: 4.6, certificado: true,  destacado: false, horasRestantes: 12, categoria: 'peces',
-    descripcion: 'Espinel artesanal. Muy fresco, capturado esta madrugada. Stock limitado.',
-  },
-  {
-    id: 6, especie: 'Caballa',                   vendedor: 'Miguel Torres',       caleta: 'Bayóvar',       precioPorKg: 3.00,   kgDisponible: 200,   emoji: '🐟', rating: 4.5, certificado: false, destacado: false, horasRestantes: 48, categoria: 'peces',
-    descripcion: 'Red de cerco industrial certificada. Precio especial por volumen mayor a 50 kg.',
-  },
-  {
-    id: 7, especie: 'Pota Patagónica',           vendedor: 'Empresa MarSur SAC',  caleta: 'Parachique',    precioPorKg: 4.50,   kgDisponible: 500,   emoji: '🦑', rating: 4.3, certificado: true,  destacado: false, horasRestantes: 72, categoria: 'cefalopodos',
-    descripcion: 'Procesado en planta certificada. Ideal para exportación. Disponible en volumen.',
-  },
-  {
-    id: 8, especie: 'Pargo Rojo',                vendedor: 'Cap. Carlos Vega',    caleta: 'Yacila',        precioPorKg: 20.00,  kgDisponible: 35,    emoji: '🐠', rating: 4.9, certificado: true,  destacado: true,  horasRestantes: 24, categoria: 'peces',
-    descripcion: 'Alta demanda en restaurantes de Lima. Muy pocas unidades disponibles.',
-  },
-  {
-    id: 9, especie: 'Cangrejo Nativo',           vendedor: 'Rosa Quispe',         caleta: 'Bayóvar',       precioPorKg: 35.00,  kgDisponible: 8,     emoji: '🦀', rating: 4.8, certificado: false, destacado: false, horasRestantes: 8,  categoria: 'crustaceos',
-    descripcion: 'Trampa artesanal, captura selectiva. Stock muy limitado, ¡reserva ahora!',
-  },
-];
+import { api } from '../../services/api';
 
 const CATEGORIAS = [
   { key: 'todos',       label: 'Todos',         emoji: '🌊' },
@@ -114,7 +75,7 @@ function ProductCard({ producto, onAdd, inCart }) {
 
         <div className="flex items-center gap-3 mb-3">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-100 flex items-center justify-center text-3xl flex-shrink-0 border border-sky-100">
-            {producto.emoji}
+            {emojis[producto.categoria] || '🐟'}
           </div>
           <div className="min-w-0">
             <p className="font-bold text-slate-900 text-sm leading-tight truncate">{producto.especie}</p>
@@ -219,31 +180,38 @@ function CartPanel({ cart, onRemove, total, onClose }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Marketplace() {
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [categoria, setCategoria] = useState('todos');
   const [sort, setSort]           = useState('reciente');
-  const [maxPrecio] = useState(100);
   const [soloDisp, setSoloDisp]   = useState(false);
   const [cartOpen, setCartOpen]   = useState(false);
   const { cart, add, remove, total } = useCart();
 
-  const filtered = PRODUCTOS
+  useEffect(() => {
+    api.get('/ofertas/marketplace')
+      .then(res => setProductos(res.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = productos
     .filter((p) => {
-      const matchSearch = p.especie.toLowerCase().includes(search.toLowerCase()) || p.vendedor.toLowerCase().includes(search.toLowerCase()) || p.caleta.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = !search || p.especie?.toLowerCase().includes(search.toLowerCase()) || p.vendedor_nombre?.toLowerCase().includes(search.toLowerCase()) || p.caleta?.toLowerCase().includes(search.toLowerCase());
       const matchCat    = categoria === 'todos' || p.categoria === categoria;
-      const matchPrecio = p.precioPorKg <= maxPrecio;
-      const matchDisp   = !soloDisp || p.kgDisponible > 0;
-      return matchSearch && matchCat && matchPrecio && matchDisp;
+      const matchDisp   = !soloDisp || parseFloat(p.peso_disponible_kg) > 0;
+      return matchSearch && matchCat && matchDisp;
     })
     .sort((a, b) => {
-      if (sort === 'precio_asc')  return a.precioPorKg - b.precioPorKg;
-      if (sort === 'precio_desc') return b.precioPorKg - a.precioPorKg;
-      if (sort === 'rating')      return b.rating - a.rating;
-      return a.horasRestantes - b.horasRestantes; // reciente = menos horas
+      if (sort === 'precio_asc')  return parseFloat(a.precio_por_kg) - parseFloat(b.precio_por_kg);
+      if (sort === 'precio_desc') return parseFloat(b.precio_por_kg) - parseFloat(a.precio_por_kg);
+      return new Date(b.created_at) - new Date(a.created_at);
     });
 
   const destacados = filtered.filter((p) => p.destacado);
   const normales   = filtered.filter((p) => !p.destacado);
+  const emojis = { peces: '🐟', crustaceos: '🦐', cefalopodos: '🦑' };
 
   return (
     <DashboardLayout>

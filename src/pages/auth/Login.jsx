@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../../layouts/AuthLayout';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { Checkbox } from '../../components/ui/Checkbox';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
@@ -20,18 +19,14 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-
-    // Demo: detectar rol por email (en producción sería respuesta del API)
-    const rol = form.email.includes('pescador') || form.email.includes('capitan') ? 'pescador' : 'comprador';
-
-    login({
-      nombre: form.email.split('@')[0],
-      email:  form.email,
-      rol,
-    });
-
-    navigate(rol === 'pescador' ? '/pescador/dashboard' : '/comprador/marketplace');
+    try {
+      const session = await login(form.email, form.password);
+      navigate(session.rol === 'pescador' ? '/pescador/dashboard' : '/comprador/marketplace');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,17 +51,6 @@ export default function Login() {
         </div>
 
         {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-
-        <div className="pt-2">
-          <Checkbox id="remember" label="Recordar sesión en este dispositivo" className="text-slate-600" />
-        </div>
-
-        {/* Demo hint */}
-        <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 text-xs text-sky-700 space-y-1">
-          <p className="font-bold">Demo rápido:</p>
-          <p>• Email con "pescador" → Panel del Pescador</p>
-          <p>• Cualquier otro email → Portal del Comprador</p>
-        </div>
 
         <Button type="submit" fullWidth size="lg" className="shadow-lg shadow-sky-500/20" disabled={loading}>
           {loading ? 'Ingresando…' : 'Iniciar Sesión →'}

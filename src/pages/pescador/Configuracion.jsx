@@ -40,8 +40,8 @@ function AvatarUploader({ initials }) {
         <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleChange} />
       </label>
       <div>
-        <p className="text-sm font-bold text-slate-900">Cap. Arturo Prat</p>
-        <p className="text-xs text-slate-500 mt-0.5">Pescador Artesanal · Puerto Madero</p>
+        <p className="text-sm font-bold text-slate-900">{auth?.nombre || 'Usuario'}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{auth?.rol === 'pescador' ? 'Pescador Artesanal' : 'Comprador'}</p>
         <label
           htmlFor="avatar-upload"
           className="text-xs text-sky-600 font-semibold mt-1 cursor-pointer hover:text-sky-700 flex items-center gap-1"
@@ -89,7 +89,7 @@ function Toggle({ checked, onChange }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Configuracion() {
-  const { auth, logout } = useAuth();
+  const { auth, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -97,7 +97,9 @@ export default function Configuracion() {
     navigate('/login');
   };
 
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const [notifs, setNotifs] = useState({
     nuevosPrecios: true,
     ofertasReservadas: true,
@@ -107,27 +109,41 @@ export default function Configuracion() {
   });
 
   const [perfil, setPerfil] = useState({
-    nombre:      auth?.nombre?.split(' ')[0] ?? 'Arturo',
-    apellido:    auth?.nombre?.split(' ').slice(1).join(' ') ?? 'Prat',
-    email:       auth?.email      ?? 'arturo.prat@delmar.pe',
-    telefono:    '+51 996 234 567',
-    caleta:      auth?.caleta     ?? 'Parachique',
-    embarcacion: 'Esperanza del Mar',
-    licencia:    'PRODUCE-2024-00341',
-    metodoPago:  'Yape / BCP: 996 234 567',
+    nombre:      auth?.nombre?.split(' ')[0] ?? '',
+    apellido:    auth?.nombre?.split(' ').slice(1).join(' ') ?? '',
+    email:       auth?.email      ?? '',
+    telefono:    auth?.telefono   ?? '',
+    caleta:      auth?.caleta     ?? '',
+    embarcacion: '',
+    licencia:    '',
+    metodoPago:  '',
   });
 
   const initials = auth?.nombre
     ? auth.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-    : 'AP';
+    : 'U';
 
   const handlePerfilChange = (k) => (e) =>
     setPerfil((prev) => ({ ...prev, [k]: e.target.value }));
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setError('');
+    setSaving(true);
+    try {
+      await updateProfile({
+        nombre: `${perfil.nombre} ${perfil.apellido}`.trim(),
+        email: perfil.email,
+        telefono: perfil.telefono || undefined,
+        caleta_principal: perfil.caleta || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -260,9 +276,11 @@ export default function Configuracion() {
             </div>
           </SectionCard>
 
+          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+
           {/* Save button */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button type="submit" fullWidth className="py-3 gap-2 text-sm">
+            <Button type="submit" fullWidth className="py-3 gap-2 text-sm" disabled={saving}>
               {saved ? (
                 <><Check size={15} className="text-emerald-400" /> Cambios guardados</>
               ) : (

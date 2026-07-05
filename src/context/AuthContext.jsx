@@ -1,12 +1,6 @@
 import { createContext, useContext, useState } from 'react';
+import { api } from '../services/api';
 
-/**
- * AuthContext – Gestión global de sesión y rol de usuario.
- *
- * roles:
- *   'pescador'  → acceso completo (vendedor + comprador)
- *   'comprador' → solo Marketplace, Mis Compras, Mapa de Caletas, Configuración
- */
 const AuthContext = createContext(null);
 
 const STORAGE_KEY = 'dmtm_auth';
@@ -23,16 +17,38 @@ function loadFromStorage() {
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadFromStorage());
 
-  const login = (userData) => {
+  const login = async (email, password) => {
+    const res = await api.post('/auth/login', { email, password });
+    const body = res.data;
+    const user = body.user;
     const session = {
-      id:     userData.id    ?? crypto.randomUUID(),
-      nombre: userData.nombre ?? userData.name ?? 'Usuario',
-      email:  userData.email,
-      rol:    userData.rol ?? 'comprador',   // 'pescador' | 'comprador'
-      caleta: userData.caleta ?? '',
+      id:      user.id,
+      nombre:  user.nombre,
+      email:   user.email,
+      rol:     user.rol,
+      caleta:  user.caleta_principal || '',
+      token:   body.token,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     setAuth(session);
+    return session;
+  };
+
+  const register = async (data) => {
+    const res = await api.post('/auth/register', data);
+    const body = res.data;
+    const user = body.user;
+    const session = {
+      id:      user.id,
+      nombre:  user.nombre,
+      email:   user.email,
+      rol:     user.rol,
+      caleta:  user.caleta_principal || '',
+      token:   body.token,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    setAuth(session);
+    return session;
   };
 
   const logout = () => {
@@ -40,8 +56,22 @@ export function AuthProvider({ children }) {
     setAuth(null);
   };
 
+  const updateProfile = async (data) => {
+    const res = await api.put('/auth/profile', data);
+    const updated = res.data;
+    const session = {
+      ...auth,
+      nombre: updated.nombre ?? auth.nombre,
+      email:  updated.email ?? auth.email,
+      caleta: updated.caleta_principal ?? auth.caleta,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    setAuth(session);
+    return session;
+  };
+
   return (
-    <AuthContext.Provider value={{ auth, login, logout, isLoggedIn: !!auth }}>
+    <AuthContext.Provider value={{ auth, login, register, logout, updateProfile, isLoggedIn: !!auth }}>
       {children}
     </AuthContext.Provider>
   );

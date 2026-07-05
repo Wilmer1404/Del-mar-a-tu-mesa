@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,31 +11,7 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const VENTAS_MES = [
-  { mes: 'Feb', valor: 2800 },
-  { mes: 'Mar', valor: 3200 },
-  { mes: 'Abr', valor: 2650 },
-  { mes: 'May', valor: 3900 },
-  { mes: 'Jun', valor: 3400 },
-  { mes: 'Jul', valor: 4250 },
-];
-
-const TOP_ESPECIES = [
-  { nombre: 'Atún Aleta Azul',          kg: 320, ingresos: 27360, pct: 100 },
-  { nombre: 'Huachinango del Pacífico', kg: 210, ingresos: 6720,  pct: 73 },
-  { nombre: 'Langostino Jumbo',         kg: 145, ingresos: 6960,  pct: 52 },
-  { nombre: 'Corvina',                  kg: 98,  ingresos: 1372,  pct: 34 },
-  { nombre: 'Mero',                     kg: 70,  ingresos: 1540,  pct: 25 },
-];
-
-const COMPRADORES = [
-  { nombre: 'Restaurante El Cebiche',  monto: 'S/ 8,450', pedidos: 12, rating: 5.0 },
-  { nombre: 'Supermercados VíVA',      monto: 'S/ 6,200', pedidos: 8,  rating: 4.8 },
-  { nombre: 'Hotel Costa Azul',        monto: 'S/ 4,100', pedidos: 6,  rating: 4.9 },
-  { nombre: 'Distribuidor PescaNorte', monto: 'S/ 3,800', pedidos: 15, rating: 4.6 },
-];
+import { api } from '../../services/api';
 
 const PERIODOS = ['Esta semana', 'Este mes', 'Último trimestre', 'Este año'];
 
@@ -89,11 +65,79 @@ function HBar({ label, kg, ingresos, pct }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Reportes() {
   const [periodo, setPeriodo] = useState('Este mes');
+  const [ventasMes, setVentasMes] = useState([]);
+  const [topEspecies, setTopEspecies] = useState([]);
+  const [compradores, setCompradores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const totalVentas    = VENTAS_MES.reduce((a, b) => a + b.valor, 0);
-  const totalKg        = TOP_ESPECIES.reduce((a, b) => a + b.kg, 0);
-  const totalOfertas   = 23;
-  const calificacion   = 4.9;
+  useEffect(() => {
+    async function fetchReportes() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [ventasRes, especiesRes, compradoresRes] = await Promise.all([
+          api.get('/api/reportes/ventas-mensuales'),
+          api.get('/api/reportes/top-especies'),
+          api.get('/api/reportes/top-compradores'),
+        ]);
+
+        setVentasMes(ventasRes.data);
+        setTopEspecies(
+          especiesRes.data.map((e) => ({
+            nombre: e.nombre_especie,
+            kg: e.kg_vendidos,
+            ingresos: e.ingresos,
+            pct: e.porcentaje,
+          }))
+        );
+        setCompradores(
+          compradoresRes.data.map((c) => ({
+            nombre: c.nombre,
+            pedidos: c.pedidos,
+            monto: `S/ ${Number(c.monto_total).toLocaleString()}`,
+            rating: 0,
+          }))
+        );
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchReportes();
+  }, []);
+
+  const totalVentas  = ventasMes.reduce((a, b) => a + b.valor, 0);
+  const totalKg      = topEspecies.reduce((a, b) => a + b.kg, 0);
+  const totalOfertas = 0;
+  const calificacion = 0;
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-screen-xl mx-auto space-y-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-screen-xl mx-auto space-y-6">
+          <div className="flex items-center justify-center py-20">
+            <p className="text-red-500 text-sm font-medium">Error: {error}</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -148,7 +192,7 @@ export default function Reportes() {
                 <TrendingUp size={13} /> +25% este mes
               </div>
             </div>
-            <BarChart data={VENTAS_MES} />
+            <BarChart data={ventasMes} />
           </div>
 
           {/* Resumen rápido */}
@@ -184,7 +228,7 @@ export default function Reportes() {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <h2 className="text-sm font-bold text-slate-900 mb-5">Top Especies por Ingresos</h2>
             <div className="space-y-4">
-              {TOP_ESPECIES.map((e) => (
+              {topEspecies.map((e) => (
                 <HBar key={e.nombre} label={e.nombre} kg={e.kg} ingresos={e.ingresos} pct={e.pct} />
               ))}
             </div>
@@ -194,7 +238,7 @@ export default function Reportes() {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <h2 className="text-sm font-bold text-slate-900 mb-5">Top Compradores</h2>
             <div className="space-y-3">
-              {COMPRADORES.map((c, i) => (
+              {compradores.map((c, i) => (
                 <div key={c.nombre} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
                   <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs font-extrabold flex-shrink-0">
                     {i + 1}

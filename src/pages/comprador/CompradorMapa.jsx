@@ -11,7 +11,7 @@ import {
   AlertTriangle, CheckCircle2, Clock, Users, Anchor, RefreshCw, Info,
 } from 'lucide-react';
 import { CompradorLayout } from '../../layouts/CompradorLayout';
-import { api } from '../../services/api';
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -108,6 +108,16 @@ function LeyendaMapa() {
   );
 }
 
+const MOCK_CALETAS = [
+  { id: 1, nombre: 'Parachique', distrito: 'Sechura', coords: [-5.5742, -80.8701], estado: 'abierto', pescadores: 340, embarcaciones: 87, viento: '12 km/h NO', temp_mar: '22°C', oleaje: '0.8 m', descripcion: 'Principal caleta de Sechura. Alta actividad de pesca pelágica, anchoveta y merluza.', color: '#10b981', precios: [{ especie: 'Huachinango', precio: 'S/ 32.00', tendencia: 'up' }, { especie: 'Langostino', precio: 'S/ 48.00', tendencia: 'down' }] },
+  { id: 2, nombre: 'Bayóvar', distrito: 'Sechura', coords: [-5.7983, -81.0326], estado: 'abierto', pescadores: 120, embarcaciones: 34, viento: '8 km/h O', temp_mar: '21°C', oleaje: '0.6 m', descripcion: 'Zona pesquera artesanal cercana al terminal portuario. Especializada en mariscos.', color: '#10b981', precios: [{ especie: 'Langostino Jumbo', precio: 'S/ 50.00', tendencia: 'up' }] },
+  { id: 3, nombre: 'Yacila', distrito: 'Paita', coords: [-4.9800, -81.1100], estado: 'abierto', pescadores: 210, embarcaciones: 62, viento: '14 km/h NO', temp_mar: '23°C', oleaje: '1.0 m', descripcion: 'Caleta pintoresca de Paita. Alta valoración por pargo y especies de fondo.', color: '#10b981', precios: [{ especie: 'Atún Aleta Azul', precio: 'S/ 85.50', tendencia: 'up' }] },
+  { id: 4, nombre: 'Puerto Paita', distrito: 'Paita', coords: [-5.0900, -81.1140], estado: 'abierto', pescadores: 680, embarcaciones: 195, viento: '10 km/h O', temp_mar: '22°C', oleaje: '0.9 m', descripcion: 'Puerto principal del norte de Perú. Mayor volumen de desembarque de la región Piura.', color: '#10b981', precios: [{ especie: 'Corvina', precio: 'S/ 14.00', tendencia: 'up' }] },
+  { id: 5, nombre: 'El Ñuro', distrito: 'Talara', coords: [-4.5150, -81.2420], estado: 'abierto', pescadores: 95, embarcaciones: 28, viento: '9 km/h SO', temp_mar: '24°C', oleaje: '0.5 m', descripcion: 'Famosa por avistamiento de tortugas. Pesca artesanal de alto valor.', color: '#10b981', precios: [{ especie: 'Pargo Rojo', precio: 'S/ 20.00', tendencia: 'up' }] },
+  { id: 6, nombre: 'Los Órganos', distrito: 'Talara', coords: [-4.1763, -81.1245], estado: 'alerta', pescadores: 145, embarcaciones: 41, viento: '22 km/h NO', temp_mar: '22°C', oleaje: '1.8 m', descripcion: 'Alerta por oleaje moderado-alto. Salida solo para embarcaciones mayores.', color: '#f59e0b', precios: [] },
+  { id: 7, nombre: 'Máncora', distrito: 'Talara', coords: [-4.1058, -81.0453], estado: 'cerrado', pescadores: 0, embarcaciones: 0, viento: '28 km/h N', temp_mar: '23°C', oleaje: '2.5 m', descripcion: 'Puerto cerrado preventivamente por marejadas. IMARPE recomienda no salir.', color: '#ef4444', precios: [] },
+];
+
 export default function CompradorMapa() {
   const [caletas, setCaletas] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -116,21 +126,16 @@ export default function CompradorMapa() {
   const [lastUpdate, setLastUpdate] = useState('');
 
   useEffect(() => {
-    const fetchCaletas = async () => {
+    const fetchCaletas = () => {
       setLoading(true);
       setError(null);
-      try {
-        const res = await api.get('/caletas');
-        if (!res.success) throw new Error(res.error || 'Error al cargar caletas');
-        const data = (res.data || []).map(mapCaleta);
-        setCaletas(data);
-        setLastUpdate(new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}));
-        if (data.length > 0) setSelected(data[0]);
-      } catch (err) {
-        setError(err.message || 'Error de conexión');
-      } finally {
+      const t = setTimeout(() => {
+        setCaletas(MOCK_CALETAS);
+        setLastUpdate(new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }));
+        setSelected(MOCK_CALETAS[0]);
         setLoading(false);
-      }
+      }, 300);
+      return () => clearTimeout(t);
     };
     fetchCaletas();
   }, []);

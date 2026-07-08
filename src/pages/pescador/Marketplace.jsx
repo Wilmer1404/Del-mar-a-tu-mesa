@@ -18,7 +18,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
-import { api } from '../../services/api';
 
 const CATEGORIAS = [
   { key: 'todos',       label: 'Todos',         emoji: '🌊' },
@@ -190,10 +189,11 @@ export default function Marketplace() {
   const { cart, add, remove, total } = useCart();
 
   useEffect(() => {
-    api.get('/ofertas/marketplace')
-      .then(res => setProductos(res.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const t = setTimeout(() => {
+      setProductos(PRODUCTOS);
+      setLoading(false);
+    }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const filtered = productos

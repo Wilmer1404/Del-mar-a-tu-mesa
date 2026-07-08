@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
-import { api } from '../../services/api';
+
 
 const PERIODOS = ['Esta semana', 'Este mes', 'Último trimestre', 'Este año'];
 
@@ -72,42 +72,28 @@ export default function Reportes() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchReportes() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [ventasRes, especiesRes, compradoresRes] = await Promise.all([
-          api.get('/api/reportes/ventas-mensuales'),
-          api.get('/api/reportes/top-especies'),
-          api.get('/api/reportes/top-compradores'),
-        ]);
-
-        setVentasMes(ventasRes.data);
-        setTopEspecies(
-          especiesRes.data.map((e) => ({
-            nombre: e.nombre_especie,
-            kg: e.kg_vendidos,
-            ingresos: e.ingresos,
-            pct: e.porcentaje,
-          }))
-        );
-        setCompradores(
-          compradoresRes.data.map((c) => ({
-            nombre: c.nombre,
-            pedidos: c.pedidos,
-            monto: `S/ ${Number(c.monto_total).toLocaleString()}`,
-            rating: 0,
-          }))
-        );
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchReportes();
+    const MOCK_VENTAS = [
+      { mes: 'Feb', valor: 6200 }, { mes: 'Mar', valor: 7100 }, { mes: 'Abr', valor: 9400 },
+      { mes: 'May', valor: 8200 }, { mes: 'Jun', valor: 10800 }, { mes: 'Jul', valor: 12480 },
+    ];
+    const MOCK_ESPECIES = [
+      { nombre: 'Huachinango', kg: 210, ingresos: 6720,  pct: 100 },
+      { nombre: 'Atún Aleta',  kg: 85,  ingresos: 7267,  pct: 90 },
+      { nombre: 'Langostino',  kg: 48,  ingresos: 2304,  pct: 55 },
+      { nombre: 'Corvina',     kg: 130, ingresos: 1820,  pct: 40 },
+    ];
+    const MOCK_COMPRADORES = [
+      { nombre: 'Rest. El Cebiche',  pedidos: 12, monto: 'S/ 4,800', rating: 5.0 },
+      { nombre: 'Hotel Mar del Sur', pedidos: 8,  monto: 'S/ 3,200', rating: 4.8 },
+      { nombre: 'Mercado Paita',     pedidos: 6,  monto: 'S/ 1,400', rating: 4.5 },
+    ];
+    const t = setTimeout(() => {
+      setVentasMes(MOCK_VENTAS);
+      setTopEspecies(MOCK_ESPECIES);
+      setCompradores(MOCK_COMPRADORES);
+      setLoading(false);
+    }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const totalVentas  = ventasMes.reduce((a, b) => a + b.valor, 0);

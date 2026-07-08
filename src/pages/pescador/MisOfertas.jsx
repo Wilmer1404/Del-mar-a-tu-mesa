@@ -22,8 +22,15 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
-import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+
+const MOCK_OFERTAS = [
+  { id: 'OF-2026-001', especie: 'Huachinango del Pacífico', caleta: 'Parachique',    fecha: '2026-07-01', vencimiento: '2026-07-05', pesoCapturo: 80,  pesoDisponible: 35,  precioPorKg: 32.00, estado: 'publicado', visitas: 142, reservas: 8, destacado: true,  emoji: '🐟', metodo: 'Artesanal Espinel' },
+  { id: 'OF-2026-002', especie: 'Atún Aleta Azul',          caleta: 'Yacila',        fecha: '2026-07-02', vencimiento: '2026-07-06', pesoCapturo: 40,  pesoDisponible: 0,   precioPorKg: 85.50, estado: 'vendido',   visitas: 210, reservas: 4, destacado: false, emoji: '🐠', metodo: 'Palangre' },
+  { id: 'OF-2026-003', especie: 'Langostino Jumbo',          caleta: 'Bayóvar',      fecha: '2026-07-03', vencimiento: '2026-07-08', pesoCapturo: 25,  pesoDisponible: 12,  precioPorKg: 48.00, estado: 'publicado', visitas: 89,  reservas: 3, destacado: false, emoji: '🦐', metodo: 'Trampa' },
+  { id: 'OF-2026-004', especie: 'Corvina',                   caleta: 'Puerto Paita', fecha: '2026-06-28', vencimiento: '2026-07-02', pesoCapturo: 60,  pesoDisponible: 60,  precioPorKg: 14.00, estado: 'expirado',  visitas: 34,  reservas: 0, destacado: false, emoji: '🐡', metodo: 'Artesanal Red' },
+  { id: 'OF-2026-005', especie: 'Pargo Rojo',                caleta: 'El Ñuro',      fecha: '2026-07-04', vencimiento: '2026-07-09', pesoCapturo: 30,  pesoDisponible: 22,  precioPorKg: 20.00, estado: 'pendiente', visitas: 5,   reservas: 0, destacado: false, emoji: '🐟', metodo: 'Artesanal Espinel' },
+];
 
 const mapOferta = (item) => ({
   id: item.id,
@@ -198,34 +205,15 @@ export default function MisOfertas() {
   useAuth();
 
   useEffect(() => {
-    let cancel = false;
-    setCargando(true);
-    setError(null);
-
-    api.get('/ofertas')
-      .then((res) => {
-        if (cancel) return;
-        const items = Array.isArray(res.data) ? res.data : [];
-        setOfertas(items.map(mapOferta));
-      })
-      .catch((err) => {
-        if (cancel) return;
-        setError(err.message || 'Error al cargar ofertas');
-      })
-      .finally(() => {
-        if (!cancel) setCargando(false);
-      });
-
-    return () => { cancel = true; };
+    const t = setTimeout(() => {
+      setOfertas(MOCK_OFERTAS);
+      setCargando(false);
+    }, 300);
+    return () => clearTimeout(t);
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/ofertas/${id}`);
-      setOfertas((prev) => prev.filter((o) => o.id !== id));
-    } catch {
-      setError('Error al eliminar la oferta');
-    }
+  const handleDelete = (id) => {
+    setOfertas((prev) => prev.filter((o) => o.id !== id));
   };
 
   const toggleSort = (key) => {

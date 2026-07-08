@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard } from '../../components/dashboard/StatCard';
-import { api } from '../../services/api';
+
 
 const ESTADOS = {
   entregado:  { label: 'Entregado',   icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50',  border: 'border-emerald-200' },
@@ -26,6 +26,15 @@ const ESTADOS = {
 };
 
 const PER_PAGE = 5;
+
+const MOCK_ORDENES = [
+  { id: 'OC-2026-001', producto: 'Redes de Cerco Reforzadas',    proveedor: 'Insumos Marinos SAC', fecha: '2026-07-03', cantidad: '2 unid.',  total: 4420.00, estado: 'entregado' },
+  { id: 'OC-2026-002', producto: 'Combustible Diesel B5',        proveedor: 'Petromar Perú',       fecha: '2026-07-01', cantidad: '200 gal', total: 3300.00, estado: 'en_camino' },
+  { id: 'OC-2026-003', producto: 'Mantenimiento de Casco',       proveedor: 'Astillero El Chaco',  fecha: '2026-06-28', cantidad: '1 serv.', total: 1800.00, estado: 'entregado' },
+  { id: 'OC-2026-004', producto: 'Motor Fuera de Borda 60HP',    proveedor: 'MotoMar Piura',       fecha: '2026-06-20', cantidad: '1 unid.', total: 9500.00, estado: 'pendiente' },
+  { id: 'OC-2026-005', producto: 'GPS Marino Garmin ECHOMAP',    proveedor: 'TechPesca',           fecha: '2026-06-15', cantidad: '1 unid.', total: 1250.00, estado: 'entregado' },
+  { id: 'OC-2026-006', producto: 'Equipo de Buceo Profesional',  proveedor: 'SafeMar Equipos',     fecha: '2026-06-10', cantidad: '1 kit',  total: 2100.00, estado: 'cancelado' },
+];
 
 function EstadoBadge({ estado }) {
   const cfg = ESTADOS[estado] || ESTADOS.pendiente;
@@ -58,17 +67,11 @@ export default function MisCompras() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    api.get('/ordenes')
-      .then((res) => {
-        const data = res.data?.data ?? res.data ?? [];
-        setOrdenes(Array.isArray(data) ? data.map(mapOrden) : []);
-      })
-      .catch((err) => {
-        setError(err.response?.data?.message || err.message || 'Error al carrar órdenes');
-      })
-      .finally(() => setLoading(false));
+    const t = setTimeout(() => {
+      setOrdenes(MOCK_ORDENES);
+      setLoading(false);
+    }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const filtered = ordenes.filter((c) => {

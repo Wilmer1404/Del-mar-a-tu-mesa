@@ -22,7 +22,7 @@ import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Button } from '../../components/ui/Button';
 import { SelectField } from '../../components/ui/SelectField';
 import { FormField } from '../../components/ui/FormField';
-import { api } from '../../services/api';
+
 
 const METODOS = [
   { value: '', label: 'Seleccione método...', disabled: true },
@@ -161,22 +161,10 @@ export default function RegistrarCaptura() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    try {
-      await api.post('/capturas', {
-        especie: form.especie,
-        caleta_origen: form.caleta,
-        cantidad_kg: parseFloat(form.cantidad),
-        precio_por_kg: parseFloat(form.precioPorKg),
-        fecha_hora_captura: form.fechaHora,
-        metodo_pesca: form.metodo,
-        observaciones: form.observaciones || undefined,
-      });
-      navigate('/pescador/dashboard');
-    } catch (err) {
-      alert('Error al guardar: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
+    // Simular guardado
+    await new Promise(r => setTimeout(r, 800));
+    setSaving(false);
+    navigate('/pescador/dashboard');
   };
 
   return (

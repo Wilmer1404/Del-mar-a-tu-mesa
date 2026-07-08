@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Filter, Eye, Download, CheckCircle2, Clock, XCircle, Truck, ChevronLeft, ChevronRight, Package, DollarSign } from 'lucide-react';
 import { CompradorLayout } from '../../layouts/CompradorLayout';
-import { api } from '../../services/api';
+
 
 const ESTADOS = {
   entregado: { label: 'Entregado',  icon: CheckCircle2, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
@@ -43,17 +43,14 @@ export default function CompradorCompras() {
   const [page, setPage]     = useState(1);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    api.get('/ordenes')
-      .then((res) => {
-        const data = res.data?.data ?? res.data ?? [];
-        setOrdenes(Array.isArray(data) ? data.map(mapOrden) : []);
-      })
-      .catch((err) => {
-        setError(err.response?.data?.message || err.message || 'Error al cargar órdenes');
-      })
-      .finally(() => setLoading(false));
+    const MOCK = [
+      { id: 'OC-2026-001', producto: 'Huachinango del Pacífico 45kg',  proveedor: 'Cap. Arturo Prat',   fecha: '2026-07-03', cantidad: '45 kg',  total: 1440.00, estado: 'entregado' },
+      { id: 'OC-2026-002', producto: 'Langostino Jumbo 12kg',           proveedor: 'Juan Flores B.',     fecha: '2026-07-01', cantidad: '12 kg',  total: 576.00,  estado: 'en_camino' },
+      { id: 'OC-2026-003', producto: 'Corvina fresca 30kg',             proveedor: 'Carlos Mend.',       fecha: '2026-06-28', cantidad: '30 kg',  total: 420.00,  estado: 'entregado' },
+      { id: 'OC-2026-004', producto: 'Atún Aleta Azul 20kg',           proveedor: 'Cap. Arturo Prat',   fecha: '2026-06-20', cantidad: '20 kg',  total: 1710.00, estado: 'pendiente' },
+    ];
+    const t = setTimeout(() => { setOrdenes(MOCK); setLoading(false); }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const filtered = ordenes.filter(c => {

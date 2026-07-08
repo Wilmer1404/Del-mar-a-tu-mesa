@@ -14,7 +14,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
-import { api } from '../../services/api';
+
 
 const ESTADO_CFG = {
   certificado: { label: 'Certificado', color: 'text-emerald-700', bg: 'bg-emerald-50',  border: 'border-emerald-200', Icon: BadgeCheck },
@@ -35,6 +35,13 @@ function mapLote(raw) {
     metodo: raw.metodo_pesca,
   };
 }
+
+const MOCK_LOTES = [
+  { id: 'LT-20260701-001', especie: 'Huachinango del Pacífico', caleta: 'Parachique',    fecha: '2026-07-01', peso: '45.5 kg', precio: 'S/ 32.00/kg', estado: 'certificado', metodo: 'Artesanal Espinel' },
+  { id: 'LT-20260702-002', especie: 'Atún Aleta Azul',          caleta: 'Yacila',        fecha: '2026-07-02', peso: '28.0 kg', precio: 'S/ 85.50/kg', estado: 'verificado',  metodo: 'Palangre' },
+  { id: 'LT-20260628-003', especie: 'Langostino Jumbo',          caleta: 'Bayóvar',      fecha: '2026-06-28', peso: '12.5 kg', precio: 'S/ 48.00/kg', estado: 'pendiente',   metodo: 'Trampa' },
+  { id: 'LT-20260620-004', especie: 'Corvina',                   caleta: 'Puerto Paita', fecha: '2026-06-20', peso: '60.0 kg', precio: 'S/ 14.00/kg', estado: 'expirado',    metodo: 'Artesanal Red' },
+];
 
 // ── Estado Badge ──────────────────────────────────────────────────────────────
 function EstadoBadge({ estado }) {
@@ -142,25 +149,11 @@ export default function TrazabilidadQR() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    api.get('/lotes')
-      .then((res) => {
-        if (cancelled) return;
-        const items = (res.data || []).map(mapLote);
-        setLotes(items);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err.message || 'Error al cargar lotes');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => { cancelled = true; };
+    const t = setTimeout(() => {
+      setLotes(MOCK_LOTES);
+      setLoading(false);
+    }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const filtered = lotes.filter(

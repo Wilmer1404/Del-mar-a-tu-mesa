@@ -6,15 +6,36 @@ import {
   Plus, Eye, Pencil, Trash2, QrCode, MapPin, ArrowRight, TrendingUp,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
 
+// ── Mock data ────────────────────────────────────────────────────────────────
+const MOCK_DASHBOARD = {
+  total_ventas_mes: 12480.50,
+  capturas_mes: 18,
+  ofertas_activas: 5,
+  ofertas_vendidas: 23,
+};
+
+const MOCK_CAPTURAS = [
+  { id: '1', especie: 'Huachinango del Pacífico', caleta_origen: 'Parachique', cantidad_kg: '45.5', precio_por_kg: '32.00', estado: 'publicado' },
+  { id: '2', especie: 'Atún Aleta Azul',          caleta_origen: 'Yacila',     cantidad_kg: '28.0', precio_por_kg: '85.50', estado: 'vendido' },
+  { id: '3', especie: 'Langostino Jumbo',          caleta_origen: 'Bayóvar',   cantidad_kg: '12.5', precio_por_kg: '48.00', estado: 'en_revision' },
+];
+
+const MOCK_PRECIOS = [
+  { id: '1', especie: 'Huachinango', precio: '32.00', cambio_pct: '+5%',  tendencia: 'up' },
+  { id: '2', especie: 'Atún Aleta',  precio: '85.50', cambio_pct: '+12%', tendencia: 'up' },
+  { id: '3', especie: 'Langostino',  precio: '48.00', cambio_pct: '-3%',  tendencia: 'down' },
+  { id: '4', especie: 'Corvina',     precio: '14.00', cambio_pct: '+15%', tendencia: 'up' },
+];
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 function CapturaRow({ captura }) {
   const estadoColor = {
-    publicado: 'bg-emerald-100 text-emerald-700',
-    pendiente: 'bg-amber-100 text-amber-700',
+    publicado:   'bg-emerald-100 text-emerald-700',
+    pendiente:   'bg-amber-100 text-amber-700',
     en_revision: 'bg-sky-100 text-sky-700',
-    vendido: 'bg-purple-100 text-purple-700',
-    expirado: 'bg-slate-100 text-slate-500',
+    vendido:     'bg-purple-100 text-purple-700',
+    expirado:    'bg-slate-100 text-slate-500',
   }[captura.estado] || 'bg-slate-100 text-slate-500';
 
   return (
@@ -38,38 +59,36 @@ function CapturaRow({ captura }) {
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
           <button aria-label="Ver detalle" className="text-slate-400 hover:text-sky-500 transition-colors"><Eye size={15} /></button>
-          <button aria-label="Editar" className="text-slate-400 hover:text-amber-500 transition-colors"><Pencil size={15} /></button>
-          <button aria-label="Eliminar" className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+          <button aria-label="Editar"      className="text-slate-400 hover:text-amber-500 transition-colors"><Pencil size={15} /></button>
+          <button aria-label="Eliminar"    className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
         </div>
       </td>
     </tr>
   );
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function PescadorDashboard() {
   const navigate = useNavigate();
-  const [dashboard, setDashboard] = useState(null);
-  const [capturas, setCapturas] = useState([]);
+  const [dashboard, setDashboard]   = useState(null);
+  const [capturas, setCapturas]     = useState([]);
   const [preciosLonja, setPreciosLonja] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      api.get('/reportes/dashboard'),
-      api.get('/capturas?limit=5'),
-      api.get('/precios/lonja'),
-    ]).then(([dashRes, captRes, preciosRes]) => {
-      setDashboard(dashRes.data);
-      setCapturas(captRes.data || []);
-      setPreciosLonja(preciosRes.data || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    // Simular carga asíncrona con datos mock
+    const t = setTimeout(() => {
+      setDashboard(MOCK_DASHBOARD);
+      setCapturas(MOCK_CAPTURAS);
+      setPreciosLonja(MOCK_PRECIOS);
+    }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const stats = dashboard ? [
-    { label: 'Total Ventas (MES)', value: `S/ ${(dashboard.total_ventas_mes || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}`, sub: 'del mes actual', subColor: 'text-emerald-500', icon: DollarSign, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
-    { label: 'Capturas (MES)', value: `${dashboard.capturas_mes || 0}`, sub: 'registradas este mes', subColor: 'text-sky-500', icon: Weight, iconBg: 'bg-sky-50', iconColor: 'text-sky-500' },
-    { label: 'Ofertas Activas', value: `${dashboard.ofertas_activas || 0}`, sub: 'en la Lonja', subColor: 'text-amber-500', icon: Tag, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
-    { label: 'Ofertas Vendidas', value: `${dashboard.ofertas_vendidas || 0}`, sub: 'totales', subColor: 'text-yellow-500', icon: Star, iconBg: 'bg-yellow-50', iconColor: 'text-yellow-500' },
+    { label: 'Total Ventas (MES)', value: `S/ ${dashboard.total_ventas_mes.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`, sub: 'del mes actual',   subColor: 'text-emerald-500', icon: DollarSign, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+    { label: 'Capturas (MES)',     value: `${dashboard.capturas_mes}`,      sub: 'registradas este mes', subColor: 'text-sky-500',     icon: Weight,     iconBg: 'bg-sky-50',     iconColor: 'text-sky-500' },
+    { label: 'Ofertas Activas',    value: `${dashboard.ofertas_activas}`,   sub: 'en la Lonja',          subColor: 'text-amber-500',   icon: Tag,        iconBg: 'bg-amber-50',   iconColor: 'text-amber-500' },
+    { label: 'Ofertas Vendidas',   value: `${dashboard.ofertas_vendidas}`,  sub: 'totales',              subColor: 'text-yellow-500',  icon: Star,       iconBg: 'bg-yellow-50',  iconColor: 'text-yellow-500' },
   ] : [];
 
   return (
@@ -104,9 +123,7 @@ export default function PescadorDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {capturas.length === 0 ? (
-                    <tr><td colSpan={5} className="py-8 text-center text-sm text-slate-400">Aún no tienes capturas registradas.</td></tr>
-                  ) : capturas.map((c) => (<CapturaRow key={c.id} captura={c} />))}
+                  {capturas.map((c) => (<CapturaRow key={c.id} captura={c} />))}
                 </tbody>
               </table>
             </div>
@@ -128,17 +145,15 @@ export default function PescadorDashboard() {
                 Últimos precios actualizados del mercado mayorista.
               </p>
               <div className="space-y-2">
-                {preciosLonja.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4">Sin precios disponibles.</p>
-                ) : preciosLonja.map((item) => {
-                  const change = parseFloat(item.cambio_pct) || 0;
+                {preciosLonja.map((item) => {
+                  const val = parseFloat(item.cambio_pct) || 0;
                   return (
                     <div key={item.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-slate-50">
                       <span className="text-sm text-slate-600 font-medium">{item.especie}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold text-slate-900">S/ {parseFloat(item.precio).toFixed(2)}</span>
-                        <span className={`text-xs font-bold ${change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                          {change >= 0 ? '+' : ''}{item.cambio_pct}
+                        <span className={`text-xs font-bold ${val >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {val >= 0 ? '+' : ''}{item.cambio_pct}
                         </span>
                       </div>
                     </div>
@@ -171,7 +186,7 @@ export default function PescadorDashboard() {
                 <h3 className="text-sm font-bold text-slate-900">Mapa de Caletas en Tiempo Real</h3>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                Visualiza la disponibilidad de muelles, clima y puntos de desembarque preferenciales según tu ubicación actual.
+                Visualiza la disponibilidad de muelles, clima y puntos de desembarque preferenciales.
               </p>
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-1.5 text-xs text-slate-600">

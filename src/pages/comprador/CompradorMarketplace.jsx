@@ -6,7 +6,7 @@ import {
   TrendingUp, Zap, Fish,
 } from 'lucide-react';
 import { CompradorLayout } from '../../layouts/CompradorLayout';
-import { api } from '../../services/api';
+
 
 const CATEGORIAS = [
   { key: 'todos', label: 'Todos', emoji: '🌊' },
@@ -44,6 +44,15 @@ function mapOferta(item) {
     descripcion: item.descripcion,
   };
 }
+
+const MOCK_PRODUCTOS = [
+  { id: '1', especie: 'Huachinango del Pacífico', vendedor: 'Cap. Arturo Prat', caleta: 'Parachique',   precioPorKg: 32.00, kgDisponible: 35, emoji: '🐟', rating: 4.9, certificado: true,  destacado: true,  horasRestantes: 48, categoria: 'peces',      descripcion: 'Captura fresca de esta mañana. Talla mediana-grande, sin golpes.' },
+  { id: '2', especie: 'Langostino Jumbo',          vendedor: 'Juan Flores B.',  caleta: 'Bayóvar',      precioPorKg: 48.00, kgDisponible: 12, emoji: '🦐', rating: 4.7, certificado: true,  destacado: true,  horasRestantes: 6,  categoria: 'crustaceos', descripcion: 'Langostino entero, talla XL. Ideal restaurantes.' },
+  { id: '3', especie: 'Atún Aleta Azul',           vendedor: 'Mario Quin.',    caleta: 'Yacila',        precioPorKg: 85.50, kgDisponible: 8,  emoji: '🐠', rating: 5.0, certificado: true,  destacado: false, horasRestantes: 12, categoria: 'peces',      descripcion: 'Premium grade, cadena de frío garantizada.' },
+  { id: '4', especie: 'Corvina',                   vendedor: 'Carlos Mend.',   caleta: 'Puerto Paita', precioPorKg: 14.00, kgDisponible: 45, emoji: '🐡', rating: 4.5, certificado: false, destacado: false, horasRestantes: 72, categoria: 'peces',      descripcion: 'Corvina entera, método artesanal red.' },
+  { id: '5', especie: 'Pota (calamar gigante)',     vendedor: 'Sara Vic.',      caleta: 'El Ñuro',      precioPorKg: 9.00,  kgDisponible: 80, emoji: '🦑', rating: 4.3, certificado: false, destacado: false, horasRestantes: 96, categoria: 'cefalopodos', descripcion: 'Pota limpia y fileteada. Gran volumen disponible.' },
+  { id: '6', especie: 'Pargo Rojo',                vendedor: 'Pedro Lazo.',    caleta: 'Los Órganos',  precioPorKg: 20.00, kgDisponible: 22, emoji: '🐟', rating: 4.6, certificado: false, destacado: false, horasRestantes: 30, categoria: 'peces',      descripcion: 'Pargo de espinel, talla uniforme.' },
+];
 
 function useCart() {
   const [cart, setCart] = useState([]);
@@ -155,10 +164,8 @@ export default function CompradorMarketplace() {
   const { cart, add, remove, total } = useCart();
 
   useEffect(() => {
-    api.get('/ofertas/marketplace')
-      .then(res => setProductos((res.data || []).map(mapOferta)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const t = setTimeout(() => { setProductos(MOCK_PRODUCTOS); setLoading(false); }, 300);
+    return () => clearTimeout(t);
   }, []);
 
   const filtered = productos

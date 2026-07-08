@@ -5,7 +5,21 @@ const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.CLIENT_URL,          // ej: https://del-mar-a-tu-mesa.netlify.app
+  'http://localhost:5173',          // dev local
+  'http://localhost:4173',          // preview local
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    // Permitir peticiones sin origin (Postman, curl, mismo servidor)
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origen ${origin} no permitido.`));
+  },
+  credentials: true,
+}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,8 +1,14 @@
 import { createContext, useContext, useState } from 'react';
-import { api } from '../services/api';
 
+/**
+ * AuthContext – Modo simulado (mock).
+ * No requiere backend. Usa localStorage para persistir la sesión.
+ *
+ * roles:
+ *   'pescador'  → acceso completo (vendedor + comprador)
+ *   'comprador' → solo Marketplace, Mis Compras, Mapa, Configuración
+ */
 const AuthContext = createContext(null);
-
 const STORAGE_KEY = 'dmtm_auth';
 
 function loadFromStorage() {
@@ -17,35 +23,58 @@ function loadFromStorage() {
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadFromStorage());
 
+  /**
+   * login(email, password)
+   * Detecta el rol por el email (demo):
+   *   - contiene "pescador" o "capitan" → rol pescador
+   *   - cualquier otro → rol comprador
+   */
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
-    const body = res.data;
-    const user = body.user;
+    // Simular latencia de red
+    await new Promise(r => setTimeout(r, 700));
+
+    if (!email || !password) {
+      throw new Error('Ingresa tu correo y contraseña.');
+    }
+
+    const rol = (email.includes('pescador') || email.includes('capitan'))
+      ? 'pescador'
+      : 'comprador';
+
     const session = {
-      id:      user.id,
-      nombre:  user.nombre,
-      email:   user.email,
-      rol:     user.rol,
-      caleta:  user.caleta_principal || '',
-      token:   body.token,
+      id:     crypto.randomUUID(),
+      nombre: email.split('@')[0].replace(/[._]/g, ' '),
+      email,
+      rol,
+      caleta: '',
+      token:  'mock-token-' + Date.now(),
     };
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     setAuth(session);
     return session;
   };
 
+  /**
+   * register(data)
+   * data: { nombre, email, password, telefono, rol }
+   */
   const register = async (data) => {
-    const res = await api.post('/auth/register', data);
-    const body = res.data;
-    const user = body.user;
+    await new Promise(r => setTimeout(r, 800));
+
+    if (!data.email || !data.password) {
+      throw new Error('Faltan datos obligatorios.');
+    }
+
     const session = {
-      id:      user.id,
-      nombre:  user.nombre,
-      email:   user.email,
-      rol:     user.rol,
-      caleta:  user.caleta_principal || '',
-      token:   body.token,
+      id:     crypto.randomUUID(),
+      nombre: data.nombre || data.email.split('@')[0],
+      email:  data.email,
+      rol:    data.rol ?? 'comprador',
+      caleta: data.caleta ?? '',
+      token:  'mock-token-' + Date.now(),
     };
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     setAuth(session);
     return session;
@@ -56,18 +85,13 @@ export function AuthProvider({ children }) {
     setAuth(null);
   };
 
+  /** Actualizar perfil localmente (sin API) */
   const updateProfile = async (data) => {
-    const res = await api.put('/auth/profile', data);
-    const updated = res.data;
-    const session = {
-      ...auth,
-      nombre: updated.nombre ?? auth.nombre,
-      email:  updated.email ?? auth.email,
-      caleta: updated.caleta_principal ?? auth.caleta,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-    setAuth(session);
-    return session;
+    await new Promise(r => setTimeout(r, 400));
+    const updated = { ...auth, ...data };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setAuth(updated);
+    return updated;
   };
 
   return (
